@@ -1,0 +1,23 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'react-toastify/dist/ReactToastify.css';
+
+@import 'vendors/flag-icon.scss';
+
+@import 'animate.scss';
+
+// Datepicker
+@import 'react-datepicker/dist/react-datepicker.css';
+
+//LeafLet
+@import 'leaflet/dist/leaflet.css';
+@import 'vendors/fontawesome.scss';
+@import 'vendors/icofont.scss';
+@import 'vendors/themify.scss';
+@import 'style';
+@import 'responsive.scss';
+@import './react_plugin';
+@import 'photoswipe/dist/photoswipe.css';
+@import '../../assets/scss/vendors/whether-icon.scss';
+
+//tour
+@import "@sjmc11/tourguidejs/src/scss/tour.scss";
