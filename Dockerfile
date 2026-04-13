@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 # ─────────────────────────────────────────────
 # Stage 1 — dépendances
 # ─────────────────────────────────────────────
@@ -6,7 +8,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json ./
-RUN npm install --frozen-lockfile 2>/dev/null || npm install
+RUN --mount=type=cache,target=/root/.npm \
+    npm install
 
 # ─────────────────────────────────────────────
 # Stage 2 — build
@@ -19,7 +22,8 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build
+RUN --mount=type=cache,target=/root/.npm \
+    npm run build
 
 # ─────────────────────────────────────────────
 # Stage 3 — runner (image minimale)
@@ -30,11 +34,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Utilisateur non-root
 RUN addgroup --system --gid 1001 nodejs && \
     adduser  --system --uid 1001 nextjs
 
-# Copie du build standalone
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
