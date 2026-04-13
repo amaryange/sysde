@@ -17,12 +17,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Variables d'environnement nécessaires au build
-ARG NEXTAUTH_URL=http://localhost:3000
-ARG NEXTAUTH_SECRET
-
-ENV NEXTAUTH_URL=$NEXTAUTH_URL
-ENV NEXTAUTH_SECRET=$NEXTAUTH_SECRET
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
