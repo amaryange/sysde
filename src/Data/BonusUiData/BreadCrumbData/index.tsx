@@ -1,0 +1,1 @@
+export const DynamicBreadCrumbData = [{ olClass: 'm-b-30 bg-secondary' }, { olClass: 'm-b-30 bg-success' }, { olClass: 'm-b-30 bg-info' }, { olClass: 'm-b-30 bg-warning' }, { olClass: 'm-b-30 bg-danger' }, { olClass: 'm-b-30 bg-light', texClass: 'txt-dark' }, { olClass: 'm-b-0 bg-dark' }];
