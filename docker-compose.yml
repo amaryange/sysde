@@ -1,0 +1,12 @@
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sysde_app
+    restart: unless-stopped
+    env_file:
+      - .env.local
+    ports:
+      - "3005:3000"
