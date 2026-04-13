@@ -7,9 +7,9 @@ FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-COPY package.json ./
+COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
-    npm install
+    npm ci
 
 # ─────────────────────────────────────────────
 # Stage 2 — build
