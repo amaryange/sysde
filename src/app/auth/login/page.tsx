@@ -58,7 +58,7 @@ const LoginPage = () => {
             border: '1px solid rgba(255,255,255,0.15)',
           }}>
             <Image
-              src={`${AssetsImagePath}/logo/dark-logo.png`}
+              src={`${AssetsImagePath}/logo.png`}
               alt='SYSDE'
               width={140}
               height={48}
