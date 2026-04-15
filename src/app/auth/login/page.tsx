@@ -48,7 +48,7 @@ const LoginPage = () => {
         }} />
 
         {/* Contenu */}
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 320 }}>
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: '100%' }}>
           <Image
             src={`${AssetsImagePath}/logo.png`}
             alt='SYSDE'
