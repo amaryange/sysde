@@ -52,8 +52,8 @@ const LoginPage = () => {
           <Image
             src={`${AssetsImagePath}/logo.png`}
             alt='SYSDE'
-            width={220}
-            height={75}
+            width={300}
+            height={100}
             style={{ objectFit: 'contain', marginBottom: 32 }}
             unoptimized
           />
