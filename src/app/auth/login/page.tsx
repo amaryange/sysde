@@ -49,23 +49,14 @@ const LoginPage = () => {
 
         {/* Contenu */}
         <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 320 }}>
-          <div style={{
-            background: 'rgba(255,255,255,0.12)',
-            borderRadius: 16,
-            padding: '20px 28px',
-            marginBottom: 32,
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255,255,255,0.15)',
-          }}>
-            <Image
-              src={`${AssetsImagePath}/logo.png`}
-              alt='SYSDE'
-              width={140}
-              height={48}
-              style={{ objectFit: 'contain' }}
-              unoptimized
-            />
-          </div>
+          <Image
+            src={`${AssetsImagePath}/logo.png`}
+            alt='SYSDE'
+            width={220}
+            height={75}
+            style={{ objectFit: 'contain', marginBottom: 32 }}
+            unoptimized
+          />
 
           <h1 style={{ color: '#fff', fontSize: 28, fontWeight: 700, margin: '0 0 10px', letterSpacing: '-0.3px' }}>
             SYSDE
