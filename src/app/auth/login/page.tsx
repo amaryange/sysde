@@ -66,19 +66,19 @@ const LoginPage = () => {
           </p>
 
           {/* Badges info */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: 220, margin: '0 auto' }}>
             {[
               { icon: '📍', text: 'Suivi géographique des postes' },
               { icon: '👷', text: 'Gestion des encadreurs' },
               { icon: '📋', text: 'Contrats & exercices' },
             ].map(({ icon, text }) => (
               <div key={text} style={{
-                display: 'flex', alignItems: 'center', gap: 10,
+                display: 'flex', alignItems: 'center', gap: 6,
                 background: 'rgba(255,255,255,0.08)',
-                borderRadius: 8, padding: '8px 14px',
-                color: 'rgba(255,255,255,0.85)', fontSize: 13,
+                borderRadius: 6, padding: '5px 10px',
+                color: 'rgba(255,255,255,0.85)', fontSize: 11,
               }}>
-                <span style={{ fontSize: 16 }}>{icon}</span>
+                <span style={{ fontSize: 12 }}>{icon}</span>
                 {text}
               </div>
             ))}
