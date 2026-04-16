@@ -90,7 +90,7 @@ const LoginPage = () => {
           position: 'absolute', bottom: 20, left: 0, right: 0,
           textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: 11,
         }}>
-          FIRCA — v1.0
+          SYSDE v1.0
         </div>
       </div>
 
