@@ -62,7 +62,7 @@ const LoginPage = () => {
             SYSDE
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 14, lineHeight: 1.6, margin: '0 0 36px' }}>
-            Système de Suivi du Déploiement des Encadreurs
+            Système Digitalysé de l'Encadrement Technique des Planteurs d'Hévéa
           </p>
 
           {/* Badges info */}
