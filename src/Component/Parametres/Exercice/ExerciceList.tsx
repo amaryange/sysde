@@ -74,12 +74,10 @@ const ExerciceList = () => {
   };
 
   const debLib    = useDebouncedCallback((v: string) => pushUrl({ ex_lib:   v || null, ex_page: null }), 300);
-  const debDebut  = useDebouncedCallback((v: string) => pushUrl({ ex_debut: v || null, ex_page: null }), 300);
-  const debCloture= useDebouncedCallback((v: string) => pushUrl({ ex_clot:  v || null, ex_page: null }), 300);
 
   const handleLib     = (v: string) => { setFLib(v);     setPage(1); debLib(v);     };
-  const handleDebut   = (v: string) => { setFDebut(v);   setPage(1); debDebut(v);   };
-  const handleCloture = (v: string) => { setFCloture(v); setPage(1); debCloture(v); };
+  const handleDebut   = (v: string) => { setFDebut(v);   setPage(1); pushUrl({ ex_debut: v || null, ex_page: null }); };
+  const handleCloture = (v: string) => { setFCloture(v); setPage(1); pushUrl({ ex_clot:  v || null, ex_page: null }); };
   const handleCt      = (v: string) => { setFCt(v);      setPage(1); pushUrl({ ex_ct:  v || null, ex_page: null }); };
   const handleStatut  = (v: string) => { setFStatut(v);  setPage(1); pushUrl({ ex_sta: v || null, ex_page: null }); };
   const handlePage    = (p: number) => { setPage(p); pushUrl({ ex_page: p > 1 ? String(p) : null }); };
@@ -122,8 +120,8 @@ const ExerciceList = () => {
   const filtered = useMemo(() => data.filter((e) => (
     (!fLib     || e.lib.toLowerCase().includes(fLib.toLowerCase())) &&
     (!fCt      || e.contrat === fCt) &&
-    (!fDebut   || e.annee.includes(fDebut)) &&
-    (!fCloture || e.cloture.includes(fCloture)) &&
+    (!fDebut   || e.annee === fDebut) &&
+    (!fCloture || e.cloture === fCloture) &&
     (!fStatut  || (fStatut === 'EnCours' ? e.statut : !e.statut))
   )), [data, fLib, fCt, fDebut, fCloture, fStatut]);
 
@@ -155,8 +153,8 @@ const ExerciceList = () => {
                 <tr>
                   <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Libellé…'  value={fLib}     onChange={(e) => handleLib(e.target.value)}     /></th>
                   <th style={colStyle}><Combobox options={CONTRAT_FILTER} value={CONTRAT_FILTER.find((o) => o.value === fCt) ?? CONTRAT_FILTER[0]} onChange={(opt) => handleCt(opt?.value ?? '')} isClearable={false} compact /></th>
-                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='AAAA-MM…'  value={fDebut}   onChange={(e) => handleDebut(e.target.value)}   /></th>
-                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='AAAA-MM…'  value={fCloture} onChange={(e) => handleCloture(e.target.value)} /></th>
+                  <th style={colStyle}><DateInput compact value={fDebut}   onChange={handleDebut}   /></th>
+                  <th style={colStyle}><DateInput compact value={fCloture} onChange={handleCloture} /></th>
                   <th style={colStyle}><Combobox options={STATUT_FILTER} value={STATUT_FILTER.find((o) => o.value === fStatut) ?? STATUT_FILTER[0]} onChange={(opt) => handleStatut(opt?.value ?? '')} isClearable={false} compact /></th>
                   <th style={colStyle} />
                 </tr>
