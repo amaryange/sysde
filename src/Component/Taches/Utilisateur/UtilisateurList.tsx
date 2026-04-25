@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Offcanvas, OffcanvasHeader, OffcanvasBody, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import AppDrawer from '@/Component/Common/AppDrawer';
 import { UserPlus, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
@@ -212,12 +213,14 @@ const UtilisateurNonEncadreurList = () => {
         </CardBody>
       </Card>
 
-      <Offcanvas direction='end' isOpen={modal} toggle={() => setModal(false)} style={{ width: 480 }}>
-        <OffcanvasHeader toggle={() => setModal(false)}>
-          {editing ? "Modifier l'utilisateur" : 'Ajouter un utilisateur'}
-        </OffcanvasHeader>
-        <OffcanvasBody className='d-flex flex-column' style={{ overflowY: 'auto' }}>
-          <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className='flex-grow-1'>
+      <AppDrawer
+        isOpen={modal}
+        toggle={() => setModal(false)}
+        title={editing ? "Modifier l'utilisateur" : 'Ajouter un utilisateur'}
+        onSave={handleSave}
+        onCancel={() => setModal(false)}
+      >
+          <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
 
             {/* ── Identité ─────────────────────────────────── */}
             <p className='text-uppercase text-muted fw-semibold mb-2' style={{ fontSize: 11, letterSpacing: '0.08em' }}>
@@ -369,13 +372,7 @@ const UtilisateurNonEncadreurList = () => {
             </FormGroup>
 
           </Form>
-
-          <div className='d-flex gap-2 pt-3 border-top mt-3'>
-            <Button color='primary' onClick={handleSave}>Enregistrer</Button>
-            <Button color='light' onClick={() => setModal(false)}>Annuler</Button>
-          </div>
-        </OffcanvasBody>
-      </Offcanvas>
+      </AppDrawer>
     </div>
   );
 };

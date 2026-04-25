@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import AppDrawer from '@/Component/Common/AppDrawer';
 import { UserPlus, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
@@ -203,46 +204,104 @@ const ChefDepartementList = () => {
         </CardBody>
       </Card>
 
-      <Modal isOpen={modal} toggle={() => setModal(false)} size='lg'>
-        <ModalHeader toggle={() => setModal(false)}>{editing ? 'Modifier le chef de département' : 'Ajouter un chef de département'}</ModalHeader>
-        <ModalBody>
+      <AppDrawer
+        isOpen={modal}
+        toggle={() => setModal(false)}
+        title={editing ? 'Modifier le chef de département' : 'Ajouter un chef de département'}
+        onSave={handleSave}
+        onCancel={() => setModal(false)}
+      >
           <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-            <Row>
-              <Col md='6'><FormGroup><Label>Nom <span className='text-danger'>*</span></Label><Input value={form.nom}     onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))}     placeholder='KONAN'        /></FormGroup></Col>
-              <Col md='6'><FormGroup><Label>Prénoms</Label>                                   <Input value={form.prenoms} onChange={(e) => setForm((f) => ({ ...f, prenoms: e.target.value }))} placeholder='Brou Édouard' /></FormGroup></Col>
-            </Row>
-            <Row>
-              <Col md='4'>
+
+            {/* ── Identité ─────────────────────────────────── */}
+            <p className='text-uppercase text-muted fw-semibold mb-2' style={{ fontSize: 11, letterSpacing: '0.08em' }}>Identité</p>
+            <Row className='g-3'>
+              <Col xs='6'>
+                <FormGroup className='mb-0'>
+                  <Label className='form-label fw-semibold mb-1'>Nom <span className='text-danger'>*</span></Label>
+                  <Input value={form.nom} onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))} placeholder='KONAN' />
+                </FormGroup>
+              </Col>
+              <Col xs='6'>
+                <FormGroup className='mb-0'>
+                  <Label className='form-label fw-semibold mb-1'>Prénoms</Label>
+                  <Input value={form.prenoms} onChange={(e) => setForm((f) => ({ ...f, prenoms: e.target.value }))} placeholder='Brou Édouard' />
+                </FormGroup>
+              </Col>
+              <Col xs='4'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Genre</Label>
                   <Combobox options={GENRES_OPT} value={form.genre} onChange={(opt) => opt && setForm((f) => ({ ...f, genre: opt }))} />
                 </FormGroup>
               </Col>
-              <Col md='4'><FormGroup><Label>Nationalité</Label><Input value={form.nat} onChange={(e) => setForm((f) => ({ ...f, nat: e.target.value }))} /></FormGroup></Col>
-              <Col md='4'><FormGroup><Label>Matricule <span className='text-danger'>*</span></Label><Input value={form.mat} onChange={(e) => setForm((f) => ({ ...f, mat: e.target.value }))} placeholder='CD001' /></FormGroup></Col>
+              <Col xs='4'>
+                <FormGroup className='mb-0'>
+                  <Label className='form-label fw-semibold mb-1'>Nationalité</Label>
+                  <Input value={form.nat} onChange={(e) => setForm((f) => ({ ...f, nat: e.target.value }))} />
+                </FormGroup>
+              </Col>
+              <Col xs='4'>
+                <FormGroup className='mb-0'>
+                  <Label className='form-label fw-semibold mb-1'>Matricule <span className='text-danger'>*</span></Label>
+                  <Input value={form.mat} onChange={(e) => setForm((f) => ({ ...f, mat: e.target.value }))} placeholder='CD001' />
+                </FormGroup>
+              </Col>
             </Row>
-            <Row>
-              <Col md='6'><Combobox label='Opérateur (encadreur)' options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></Col>
-              <Col md='6'><Combobox label='Poste' options={POSTES_OPT} value={form.poste} onChange={(opt) => opt && setForm((f) => ({ ...f, poste: opt }))} /></Col>
+
+            <hr className='my-3' style={{ borderColor: 'transparent' }} />
+
+            {/* ── Affectation ───────────────────────────────── */}
+            <p className='text-uppercase text-muted fw-semibold mb-2' style={{ fontSize: 11, letterSpacing: '0.08em' }}>Affectation</p>
+            <Row className='g-3'>
+              <Col xs='12'>
+                <Combobox label='Opérateur (encadreur)' options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} />
+              </Col>
+              <Col xs='12'>
+                <Combobox label='Poste' options={POSTES_OPT} value={form.poste} onChange={(opt) => opt && setForm((f) => ({ ...f, poste: opt }))} />
+              </Col>
             </Row>
-            <Row>
-              <Col md='6'><FormGroup><Label>Email</Label>    <Input type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='user@operateur.ci'  /></FormGroup></Col>
-              <Col md='6'><FormGroup><Label>Téléphone</Label><Input             value={form.tel}   onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))}   placeholder='+225 XX XX XX XX' /></FormGroup></Col>
+
+            <hr className='my-3' style={{ borderColor: 'transparent' }} />
+
+            {/* ── Contact ───────────────────────────────────── */}
+            <p className='text-uppercase text-muted fw-semibold mb-2' style={{ fontSize: 11, letterSpacing: '0.08em' }}>Contact</p>
+            <Row className='g-3'>
+              <Col xs='7'>
+                <FormGroup className='mb-0'>
+                  <Label className='form-label fw-semibold mb-1'>Email</Label>
+                  <Input type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='user@operateur.ci' />
+                </FormGroup>
+              </Col>
+              <Col xs='5'>
+                <FormGroup className='mb-0'>
+                  <Label className='form-label fw-semibold mb-1'>Téléphone</Label>
+                  <Input value={form.tel} onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))} placeholder='+225 XX XX XX XX' />
+                </FormGroup>
+              </Col>
             </Row>
+
             {!editing && (
-              <FormGroup><Label>Mot de passe <span className='text-danger'>*</span></Label><Input type='password' value={form.mdp} onChange={(e) => setForm((f) => ({ ...f, mdp: e.target.value }))} placeholder='••••••••' /></FormGroup>
+              <>
+                <hr className='my-3' style={{ borderColor: 'transparent' }} />
+
+                {/* ── Accès ─────────────────────────────────── */}
+                <p className='text-uppercase text-muted fw-semibold mb-2' style={{ fontSize: 11, letterSpacing: '0.08em' }}>Accès</p>
+                <FormGroup className='mb-0'>
+                  <Label className='form-label fw-semibold mb-1'>Mot de passe <span className='text-danger'>*</span></Label>
+                  <Input type='password' value={form.mdp} onChange={(e) => setForm((f) => ({ ...f, mdp: e.target.value }))} placeholder='••••••••' />
+                </FormGroup>
+              </>
             )}
-            <FormGroup check>
-              <Input type='checkbox' checked={form.actif} onChange={(e) => setForm((f) => ({ ...f, actif: e.target.checked }))} />
-              <Label check>Compte actif</Label>
+
+            <hr className='my-3' style={{ borderColor: 'transparent' }} />
+
+            <FormGroup check className='mb-0'>
+              <Input type='checkbox' id='cd-actif-check' checked={form.actif} onChange={(e) => setForm((f) => ({ ...f, actif: e.target.checked }))} />
+              <Label check htmlFor='cd-actif-check' className='fw-semibold'>Compte actif</Label>
             </FormGroup>
+
           </Form>
-        </ModalBody>
-        <ModalFooter>
-          <Button color='primary' onClick={handleSave}>Enregistrer</Button>
-          <Button color='light' onClick={() => setModal(false)}>Annuler</Button>
-        </ModalFooter>
-      </Modal>
+      </AppDrawer>
     </div>
   );
 };
