@@ -3,24 +3,19 @@
 import { useState } from 'react';
 import { Container, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 import { useHeaderStore } from '@/Store/useHeaderStore';
-import OperateurList   from './Operateur/OperateurList';
-import PosteList       from './Poste/PosteList';
-import ContratList     from './Contrat/ContratList';
-import ExerciceList    from './Exercice/ExerciceList';
-import LotList         from './Lot/LotList';
-import UtilisateurList  from './Utilisateur/UtilisateurList';
-import AffectationList  from './Affectations/AffectationList';
-import LogsList         from './Logs/LogsList';
+import OperateurList from './Operateur/OperateurList';
+import PosteList     from './Poste/PosteList';
+import ContratList   from './Contrat/ContratList';
+import ExerciceList  from './Exercice/ExerciceList';
+import LotList       from './Lot/LotList';
+import LogsList      from './Logs/LogsList';
 
 const TABS = [
-  { id: 'operateur',    label: 'Opérateur'    },
-  { id: 'poste',        label: 'Poste'         },
-  { id: 'contrat',      label: 'Contrat'       },
-  { id: 'exercice',     label: 'Exercice'      },
-  { id: 'lot',          label: 'Lot'           },
-  { id: 'utilisateur',  label: 'Utilisateur'   },
-  { id: 'affectations', label: 'Affectations'  },
-  { id: 'logs',         label: 'Journal'       },
+  { id: 'operateur', label: 'Opérateur' },
+  { id: 'poste',     label: 'Poste'     },
+  { id: 'contrat',   label: 'Contrat'   },
+  { id: 'exercice',  label: 'Exercice'  },
+  { id: 'lot',       label: 'Lot'       },
 ];
 
 const ParametresContainer = () => {
@@ -47,14 +42,12 @@ const ParametresContainer = () => {
       </div>
 
       <TabContent activeTab={activeTab}>
-        <TabPane tabId='operateur'>   <OperateurList   /></TabPane>
-        <TabPane tabId='poste'>       <PosteList       /></TabPane>
-        <TabPane tabId='contrat'>     <ContratList     /></TabPane>
-        <TabPane tabId='exercice'>    <ExerciceList    /></TabPane>
-        <TabPane tabId='lot'>         <LotList         /></TabPane>
-        <TabPane tabId='utilisateur'>  <UtilisateurList  /></TabPane>
-        <TabPane tabId='affectations'> <AffectationList  /></TabPane>
-        <TabPane tabId='logs'>         <LogsList         /></TabPane>
+        <TabPane tabId='operateur'><OperateurList /></TabPane>
+        <TabPane tabId='poste'>    <PosteList     /></TabPane>
+        <TabPane tabId='contrat'>  <ContratList   /></TabPane>
+        <TabPane tabId='exercice'> <ExerciceList  /></TabPane>
+        <TabPane tabId='lot'>      <LotList       /></TabPane>
+        <TabPane tabId='logs'>     <LogsList      /></TabPane>
       </TabContent>
     </Container>
   );

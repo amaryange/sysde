@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 import { useHeaderStore } from '@/Store/useHeaderStore';
-import ChefSecteurList from './Utilisateur/ChefSecteurList';
+import UtilisateurList from '@/Component/Parametres/Utilisateur/UtilisateurList';
 import CollaborateurList from './Collaborateur/CollaborateurList';
 
 const TachesContainer = () => {
@@ -36,7 +36,7 @@ const TachesContainer = () => {
 
       <TabContent activeTab={activeTab}>
         <TabPane tabId='utilisateur'>
-          <ChefSecteurList />
+          <UtilisateurList />
         </TabPane>
         <TabPane tabId='collaborateur'>
           <CollaborateurList />
