@@ -12,23 +12,20 @@ import { useLog } from '@/hooks/useLog';
 
 type Contrat = { id: number; num: string; operateur: string; debut: string; fin: string; signature: string; montant: number; statut: boolean };
 
+// Uniquement les opérateurs encadreurs — les non-encadreurs (FIRCA, APROMAC…) n'ont pas de contrat
 const OPERATEURS_OPT: ComboboxOption[] = [
-  { value: 'SAPH',    label: 'SAPH'    },
-  { value: 'PALMCI',  label: 'PALMCI'  },
-  { value: 'SOGB',    label: 'SOGB'    },
-  { value: 'FIRCA',   label: 'FIRCA'   },
-  { value: 'APROMAC', label: 'APROMAC' },
+  { value: 'SAPH',   label: 'SAPH'   },
+  { value: 'PALMCI', label: 'PALMCI' },
+  { value: 'SOGB',   label: 'SOGB'   },
 ];
 
-const OP_FILTER: ComboboxOption[]     = [{ value: 'Tous', label: 'Tous les opérateurs' }, ...OPERATEURS_OPT];
+const OP_FILTER = [{ value: 'Tous', label: 'Tous les opérateurs' }, ...OPERATEURS_OPT];
 const STATUT_FILTER: ComboboxOption[] = [{ value: 'Tous', label: 'Tous' }, { value: 'Actif', label: 'Actif' }, { value: 'Cloture', label: 'Clôturé' }];
 
 const INITIAL: Contrat[] = [
-  { id: 1, num: 'CTR-2024-001', operateur: 'SAPH',    debut: '2024-01-01', fin: '2024-12-31', signature: '2023-12-15', montant: 150000000, statut: true  },
-  { id: 2, num: 'CTR-2024-002', operateur: 'PALMCI',  debut: '2024-02-01', fin: '2024-12-31', signature: '2024-01-20', montant: 85000000,  statut: true  },
-  { id: 3, num: 'CTR-2023-005', operateur: 'SOGB',    debut: '2023-06-01', fin: '2024-05-31', signature: '2023-05-10', montant: 60000000,  statut: false },
-  { id: 4, num: 'CTR-2024-003', operateur: 'FIRCA',   debut: '2024-03-01', fin: '2025-02-28', signature: '2024-02-25', montant: 200000000, statut: true  },
-  { id: 5, num: 'CTR-2024-004', operateur: 'APROMAC', debut: '2024-04-01', fin: '2024-09-30', signature: '2024-03-28', montant: 45000000,  statut: true  },
+  { id: 1, num: 'CTR-2024-001', operateur: 'SAPH',   debut: '2024-01-01', fin: '2026-12-31', signature: '2023-12-15', montant: 150000000, statut: true  },
+  { id: 2, num: 'CTR-2024-002', operateur: 'PALMCI', debut: '2024-02-01', fin: '2026-01-31', signature: '2024-01-20', montant: 85000000,  statut: true  },
+  { id: 3, num: 'CTR-2023-005', operateur: 'SOGB',   debut: '2023-06-01', fin: '2026-05-31', signature: '2023-05-10', montant: 60000000,  statut: false },
 ];
 
 const PAGE_SIZE   = 6;

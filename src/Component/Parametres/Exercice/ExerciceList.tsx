@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Row, Col, Alert } from 'reactstrap';
 import { PlusCircle, Edit2, Trash2, Search } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
@@ -12,23 +12,35 @@ import { useLog } from '@/hooks/useLog';
 
 type Exercice = { id: number; lib: string; annee: string; cloture: string; statut: boolean; contrat: string };
 
+// Uniquement les contrats des opérateurs encadreurs
 const CONTRATS_OPT: ComboboxOption[] = [
-  { value: 'CTR-2024-001', label: 'CTR-2024-001 — SAPH'    },
-  { value: 'CTR-2024-002', label: 'CTR-2024-002 — PALMCI'  },
-  { value: 'CTR-2024-003', label: 'CTR-2024-003 — FIRCA'   },
-  { value: 'CTR-2024-004', label: 'CTR-2024-004 — APROMAC' },
-  { value: 'CTR-2023-005', label: 'CTR-2023-005 — SOGB'    },
+  { value: 'CTR-2024-001', label: 'CTR-2024-001 — SAPH'   },
+  { value: 'CTR-2024-002', label: 'CTR-2024-002 — PALMCI' },
+  { value: 'CTR-2023-005', label: 'CTR-2023-005 — SOGB'   },
 ];
 
-const CONTRAT_FILTER: ComboboxOption[] = [{ value: 'Tous', label: 'Tous les contrats' }, ...CONTRATS_OPT];
+// Dates des contrats — miroir de ContratList (remplacé par API quand la BDD sera branchée)
+const CONTRATS_DATES: Record<string, { debut: string; fin: string }> = {
+  'CTR-2024-001': { debut: '2024-01-01', fin: '2026-12-31' }, // 3 ans
+  'CTR-2024-002': { debut: '2024-02-01', fin: '2026-01-31' }, // 2 ans
+  'CTR-2023-005': { debut: '2023-06-01', fin: '2026-05-31' }, // 3 ans
+};
+
+const dureeAns = (num: string): number => {
+  const d = CONTRATS_DATES[num];
+  if (!d) return 0;
+  const ms = new Date(d.fin).getTime() - new Date(d.debut).getTime();
+  return Math.ceil(ms / (365.25 * 24 * 60 * 60 * 1000));
+};
+
+const CONTRAT_FILTER = [{ value: 'Tous', label: 'Tous les contrats' }, ...CONTRATS_OPT];
 const STATUT_FILTER: ComboboxOption[]  = [{ value: 'Tous', label: 'Tous' }, { value: 'EnCours', label: 'En cours' }, { value: 'Cloture', label: 'Clôturé' }];
 
 const INITIAL: Exercice[] = [
-  { id: 1, lib: 'Exercice 2024 S1', annee: '2024-01-01', cloture: '2024-06-30', statut: false, contrat: 'CTR-2024-001' },
-  { id: 2, lib: 'Exercice 2024 S2', annee: '2024-07-01', cloture: '',           statut: true,  contrat: 'CTR-2024-001' },
-  { id: 3, lib: 'Exercice 2024',    annee: '2024-02-01', cloture: '',           statut: true,  contrat: 'CTR-2024-002' },
-  { id: 4, lib: 'Exercice 2024',    annee: '2024-03-01', cloture: '',           statut: true,  contrat: 'CTR-2024-003' },
-  { id: 5, lib: 'Exercice 2023',    annee: '2023-06-01', cloture: '2024-05-31', statut: false, contrat: 'CTR-2023-005' },
+  { id: 1, lib: 'Exercice 2024', annee: '2024-01-01', cloture: '2024-12-31', statut: false, contrat: 'CTR-2024-001' },
+  { id: 2, lib: 'Exercice 2025', annee: '2025-01-01', cloture: '',           statut: true,  contrat: 'CTR-2024-001' },
+  { id: 3, lib: 'Exercice 2024', annee: '2024-02-01', cloture: '',           statut: true,  contrat: 'CTR-2024-002' },
+  { id: 4, lib: 'Exercice 2023', annee: '2023-06-01', cloture: '2024-05-31', statut: false, contrat: 'CTR-2023-005' },
 ];
 
 const PAGE_SIZE = 6;
@@ -74,8 +86,16 @@ const ExerciceList = () => {
     setData((p) => p.filter((e) => e.id !== id));
     log('DELETE', 'Exercice', `Suppression de l'exercice ${target?.lib ?? id}`, target?.lib);
   };
+  const maxExercices = dureeAns(form.contrat.value);
+  const nbExistants  = useMemo(
+    () => data.filter((e) => e.contrat === form.contrat.value && (!editing || e.id !== editing.id)).length,
+    [data, form.contrat.value, editing]
+  );
+  const limiteAtteinte = nbExistants >= maxExercices;
+
   const handleSave = () => {
     if (!form.lib.trim() || !form.annee) return;
+    if (limiteAtteinte) return;
     const payload = { lib: form.lib, annee: form.annee, cloture: form.cloture, statut: form.statut, contrat: form.contrat.value };
     if (editing) {
       setData((p) => p.map((e) => e.id === editing.id ? { ...e, ...payload } : e));
@@ -163,7 +183,18 @@ const ExerciceList = () => {
         <ModalBody>
           <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
             <FormGroup><Label>Libellé <span className='text-danger'>*</span></Label><Input value={form.lib} onChange={(e) => setForm((f) => ({ ...f, lib: e.target.value }))} placeholder='Ex: Exercice 2024 S1' /></FormGroup>
+
             <Combobox label='Contrat' options={CONTRATS_OPT} value={form.contrat} onChange={(opt) => opt && setForm((f) => ({ ...f, contrat: opt }))} />
+
+            {maxExercices > 0 && (
+              <Alert color={limiteAtteinte ? 'danger' : nbExistants === maxExercices - 1 ? 'warning' : 'info'} className='py-2 px-3 mb-3' style={{ fontSize: 13 }}>
+                {limiteAtteinte
+                  ? <>Ce contrat a atteint sa limite de <strong>{maxExercices} exercice{maxExercices > 1 ? 's' : ''}</strong> ({maxExercices} an{maxExercices > 1 ? 's' : ''} de durée). Impossible d'en ajouter un autre.</>
+                  : <><strong>{nbExistants}</strong> exercice{nbExistants > 1 ? 's' : ''} sur <strong>{maxExercices}</strong> autorisé{maxExercices > 1 ? 's' : ''} pour ce contrat ({maxExercices} an{maxExercices > 1 ? 's' : ''}).</>
+                }
+              </Alert>
+            )}
+
             <Row>
               <Col md='6'><DateInput label='Date de début'   required value={form.annee}   onChange={(v) => setForm((f) => ({ ...f, annee: v }))}   /></Col>
               <Col md='6'><DateInput label='Date de clôture'          value={form.cloture} onChange={(v) => setForm((f) => ({ ...f, cloture: v }))} /></Col>
@@ -175,7 +206,7 @@ const ExerciceList = () => {
           </Form>
         </ModalBody>
         <ModalFooter>
-          <Button color='primary' onClick={handleSave}>Enregistrer</Button>
+          <Button color='primary' onClick={handleSave} disabled={limiteAtteinte}>Enregistrer</Button>
           <Button color='light' onClick={() => setModal(false)}>Annuler</Button>
         </ModalFooter>
       </Modal>
