@@ -25,6 +25,7 @@ type BaseProps<V = string> = {
   name?: string;
   onBlur?: () => void;
   noOptionsMessage?: string;
+  compact?: boolean;
 };
 
 type SingleProps<V = string> = BaseProps<V> & {
@@ -44,9 +45,12 @@ export type ComboboxProps<V = string> = SingleProps<V> | MultiProps<V>;
 const PRIMARY = '#24695c';
 const PRIMARY_ALPHA = (a: number) => `rgba(36,105,92,${a})`;
 
-const customStyles = <V,>(hasError: boolean): StylesConfig<ComboboxOption<V>, boolean, GroupBase<ComboboxOption<V>>> => ({
+const customStyles = <V,>(hasError: boolean, compact = false): StylesConfig<ComboboxOption<V>, boolean, GroupBase<ComboboxOption<V>>> => ({
   control: (base, state) => ({
     ...base,
+    minHeight: compact ? 28 : base.minHeight,
+    height:    compact ? 28 : undefined,
+    fontSize:  compact ? 12 : undefined,
     borderColor: hasError ? '#dc3545' : state.isFocused ? PRIMARY : '#ced4da',
     boxShadow: hasError
       ? '0 0 0 0.2rem rgba(220,53,69,.25)'
@@ -56,6 +60,18 @@ const customStyles = <V,>(hasError: boolean): StylesConfig<ComboboxOption<V>, bo
     '&:hover': {
       borderColor: hasError ? '#dc3545' : PRIMARY,
     },
+  }),
+  valueContainer: (base) => ({
+    ...base,
+    ...(compact ? { padding: '0 6px' } : {}),
+  }),
+  dropdownIndicator: (base) => ({
+    ...base,
+    ...(compact ? { padding: '0 4px' } : {}),
+  }),
+  clearIndicator: (base) => ({
+    ...base,
+    ...(compact ? { padding: '0 4px' } : {}),
   }),
   menu: (base) => ({
     ...base,
@@ -103,6 +119,7 @@ function ComboboxInner<V = string>(
     name,
     onBlur,
     noOptionsMessage = 'Aucun résultat',
+    compact = false,
     ...rest
   }: ComboboxProps<V>,
   ref: React.Ref<any>
@@ -119,7 +136,7 @@ function ComboboxInner<V = string>(
   };
 
   return (
-    <div className='mb-2'>
+    <div className={compact ? 'mb-0' : 'mb-2'}>
       {label && (
         <Label className='col-form-label' htmlFor={inputId}>
           {label}
@@ -140,9 +157,11 @@ function ComboboxInner<V = string>(
         isRtl={isRtl}
         isMulti={(rest as MultiProps<V>).isMulti ?? false}
         className={className}
-        styles={customStyles<V>(hasError)}
+        styles={customStyles<V>(hasError, compact)}
         noOptionsMessage={() => noOptionsMessage}
         classNamePrefix='combobox'
+        menuPortalTarget={compact && typeof document !== 'undefined' ? document.body : undefined}
+        menuPosition={compact ? 'fixed' : undefined}
       />
       {hasError && (
         <FormFeedback style={{ display: 'block' }}>{error}</FormFeedback>
