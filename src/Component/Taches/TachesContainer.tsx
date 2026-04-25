@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 import { useHeaderStore } from '@/Store/useHeaderStore';
-import UtilisateurList from '@/Component/Parametres/Utilisateur/UtilisateurList';
+import UtilisateurList from './Utilisateur/UtilisateurList';
 import CollaborateurList from './Collaborateur/CollaborateurList';
 
 const TachesContainer = () => {
