@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
-import { PlusCircle, Edit2, Trash2, Search } from 'react-feather';
+import { PlusCircle, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -19,7 +19,7 @@ const SECTEURS_OPT: ComboboxOption[] = [
   { value: 'Daoukro',      label: 'Daoukro'      },
 ];
 
-const SECTEUR_FILTER: ComboboxOption[] = [{ value: 'Tous', label: 'Tous les secteurs' }, ...SECTEURS_OPT];
+const SECTEUR_FILTER = [{ value: '', label: 'Tous' }, ...SECTEURS_OPT];
 
 const INITIAL: Lot[] = [
   { id: 1, num: '1', cde: 'LT-01', couverture: 'Zone Nord Abengourou', secteur: 'Abengourou',   region: 'Indénié-Djuablin', departement: 'Abengourou',   sprefecture: 'Abengourou'   },
@@ -35,6 +35,9 @@ const INITIAL: Lot[] = [
 const PAGE_SIZE = 6;
 const emptyForm = () => ({ num: '', cde: '', couverture: '', secteur: SECTEURS_OPT[0], region: '', departement: '', sprefecture: '' });
 
+const colStyle: React.CSSProperties   = { padding: '4px 8px' };
+const inputStyle: React.CSSProperties = { fontSize: 12, padding: '3px 6px', height: 28 };
+
 const LotList = () => {
   const router       = useRouter();
   const pathname     = usePathname();
@@ -46,20 +49,30 @@ const LotList = () => {
   const [editing, setEditing] = useState<Lot | null>(null);
   const [form,    setForm   ] = useState(emptyForm);
 
-  const [search,  setSearch ] = useState(() => searchParams.get('lt_q')   ?? '');
-  const [secteur, setSecteur] = useState(() => searchParams.get('lt_sec') ?? 'Tous');
-  const [page,    setPage   ] = useState(() => Number(searchParams.get('lt_page') ?? '1'));
+  const [fNum,  setFNum  ] = useState(() => searchParams.get('lt_num') ?? '');
+  const [fCde,  setFCde  ] = useState(() => searchParams.get('lt_cde') ?? '');
+  const [fCouv, setFCouv ] = useState(() => searchParams.get('lt_couv') ?? '');
+  const [fSec,  setFSec  ] = useState(() => searchParams.get('lt_sec') ?? '');
+  const [fDep,  setFDep  ] = useState(() => searchParams.get('lt_dep') ?? '');
+  const [page,  setPage  ] = useState(() => Number(searchParams.get('lt_page') ?? '1'));
 
   const pushUrl = (overrides: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
-    Object.entries(overrides).forEach(([k, v]) => { if (v === null || v === '') params.delete(k); else params.set(k, v); });
+    Object.entries(overrides).forEach(([k, v]) => { if (!v) params.delete(k); else params.set(k, v); });
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const pushSearch    = useDebouncedCallback((v: string) => pushUrl({ lt_q: v || null, lt_page: null }), 300);
-  const handleSearch  = (e: React.ChangeEvent<HTMLInputElement>) => { setSearch(e.target.value); setPage(1); pushSearch(e.target.value); };
-  const handleSecteur = (v: string) => { setSecteur(v); setPage(1); pushUrl({ lt_sec: v === 'Tous' ? null : v, lt_page: null }); };
-  const handlePage    = (p: number) => { setPage(p); pushUrl({ lt_page: p > 1 ? String(p) : null }); };
+  const debNum  = useDebouncedCallback((v: string) => pushUrl({ lt_num:  v || null, lt_page: null }), 300);
+  const debCde  = useDebouncedCallback((v: string) => pushUrl({ lt_cde:  v || null, lt_page: null }), 300);
+  const debCouv = useDebouncedCallback((v: string) => pushUrl({ lt_couv: v || null, lt_page: null }), 300);
+  const debDep  = useDebouncedCallback((v: string) => pushUrl({ lt_dep:  v || null, lt_page: null }), 300);
+
+  const handleNum  = (v: string) => { setFNum(v);  setPage(1); debNum(v);  };
+  const handleCde  = (v: string) => { setFCde(v);  setPage(1); debCde(v);  };
+  const handleCouv = (v: string) => { setFCouv(v); setPage(1); debCouv(v); };
+  const handleDep  = (v: string) => { setFDep(v);  setPage(1); debDep(v);  };
+  const handleSec  = (v: string) => { setFSec(v);  setPage(1); pushUrl({ lt_sec: v || null, lt_page: null }); };
+  const handlePage = (p: number) => { setPage(p); pushUrl({ lt_page: p > 1 ? String(p) : null }); };
 
   const openAdd  = () => { setEditing(null); setForm(emptyForm()); setModal(true); };
   const openEdit = (l: Lot) => {
@@ -87,12 +100,13 @@ const LotList = () => {
     setModal(false);
   };
 
-  const filtered = useMemo(() => data.filter((l) => {
-    const q = search.toLowerCase();
-    const matchQ = l.num.toLowerCase().includes(q) || l.cde.toLowerCase().includes(q) || l.couverture.toLowerCase().includes(q);
-    const matchS = secteur === 'Tous' || l.secteur === secteur;
-    return matchQ && matchS;
-  }), [data, search, secteur]);
+  const filtered = useMemo(() => data.filter((l) => (
+    (!fNum  || l.num.includes(fNum)) &&
+    (!fCde  || l.cde.toLowerCase().includes(fCde.toLowerCase())) &&
+    (!fCouv || l.couverture.toLowerCase().includes(fCouv.toLowerCase())) &&
+    (!fSec  || l.secteur === fSec) &&
+    (!fDep  || l.departement.toLowerCase().includes(fDep.toLowerCase()))
+  )), [data, fNum, fCde, fCouv, fSec, fDep]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -106,27 +120,27 @@ const LotList = () => {
         </Button>
       </div>
 
-      <Row className='mb-3 g-2'>
-        <Col md='5'>
-          <div className='input-group'>
-            <span className='input-group-text bg-transparent'><Search size={15} className='text-muted' /></span>
-            <Input type='text' placeholder='Rechercher par numéro, code, zone…' value={search} onChange={handleSearch} />
-          </div>
-        </Col>
-        <Col md='3'>
-          <Combobox options={SECTEUR_FILTER} value={SECTEUR_FILTER.find((o) => o.value === secteur) ?? null} onChange={(opt) => handleSecteur(opt?.value ?? 'Tous')} isClearable={false} placeholder='Secteur' />
-        </Col>
-        <Col md='2' className='text-muted d-flex align-items-center'>
-          <small>{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</small>
-        </Col>
-      </Row>
-
       <Card>
         <CardBody className='p-0'>
           <div className='table-responsive'>
-            <Table className='table table-hover mb-0'>
+            <Table className='table table-hover mb-0' style={{ tableLayout: 'fixed', minWidth: 860 }}>
               <thead className='table-light'>
-                <tr><th>N° Lot</th><th>Code</th><th>Zone de couverture</th><th>Secteur</th><th>Département</th><th className='text-end'>Actions</th></tr>
+                <tr>
+                  <th style={{ width: '8%'  }}>N° Lot</th>
+                  <th style={{ width: '10%' }}>Code</th>
+                  <th style={{ width: '24%' }}>Zone de couverture</th>
+                  <th style={{ width: '15%' }}>Secteur</th>
+                  <th style={{ width: '18%' }}>Département</th>
+                  <th style={{ width: '10%' }} className='text-end'>Actions</th>
+                </tr>
+                <tr>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='N°…'      value={fNum}  onChange={(e) => handleNum(e.target.value)}  /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Code…'    value={fCde}  onChange={(e) => handleCde(e.target.value)}  /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Zone…'    value={fCouv} onChange={(e) => handleCouv(e.target.value)} /></th>
+                  <th style={colStyle}><Combobox options={SECTEUR_FILTER} value={SECTEUR_FILTER.find((o) => o.value === fSec) ?? SECTEUR_FILTER[0]} onChange={(opt) => handleSec(opt?.value ?? '')} isClearable={false} compact /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Dépt…'    value={fDep}  onChange={(e) => handleDep(e.target.value)}  /></th>
+                  <th style={colStyle} />
+                </tr>
               </thead>
               <tbody>
                 {paginated.length === 0 ? (
@@ -135,7 +149,7 @@ const LotList = () => {
                   <tr key={l.id}>
                     <td className='f-w-600'>Lot {l.num}</td>
                     <td><code>{l.cde}</code></td>
-                    <td>{l.couverture}</td>
+                    <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.couverture}</td>
                     <td className='text-muted'>{l.secteur}</td>
                     <td className='text-muted'>{l.departement}</td>
                     <td className='text-end'>
@@ -147,7 +161,8 @@ const LotList = () => {
               </tbody>
             </Table>
           </div>
-          <div className='px-3 pb-2'>
+          <div className='px-3 pb-2 d-flex align-items-center justify-content-between'>
+            <small className='text-muted'>{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</small>
             <AppPagination currentPage={page} totalPages={totalPages} onPageChange={handlePage} />
           </div>
         </CardBody>

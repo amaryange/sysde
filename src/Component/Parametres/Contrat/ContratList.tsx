@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
-import { PlusCircle, Edit2, Trash2, Search } from 'react-feather';
+import { PlusCircle, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -19,8 +19,8 @@ const OPERATEURS_OPT: ComboboxOption[] = [
   { value: 'SOGB',   label: 'SOGB'   },
 ];
 
-const OP_FILTER = [{ value: 'Tous', label: 'Tous les opérateurs' }, ...OPERATEURS_OPT];
-const STATUT_FILTER: ComboboxOption[] = [{ value: 'Tous', label: 'Tous' }, { value: 'Actif', label: 'Actif' }, { value: 'Cloture', label: 'Clôturé' }];
+const OP_FILTER     = [{ value: '', label: 'Tous' }, ...OPERATEURS_OPT];
+const STATUT_FILTER: ComboboxOption[] = [{ value: '', label: 'Tous' }, { value: 'Actif', label: 'Actif' }, { value: 'Cloture', label: 'Clôturé' }];
 
 const INITIAL: Contrat[] = [
   { id: 1, num: 'CTR-2024-001', operateur: 'SAPH',   debut: '2024-01-01', fin: '2026-12-31', signature: '2023-12-15', montant: 150000000, statut: true  },
@@ -28,9 +28,12 @@ const INITIAL: Contrat[] = [
   { id: 3, num: 'CTR-2023-005', operateur: 'SOGB',   debut: '2023-06-01', fin: '2026-05-31', signature: '2023-05-10', montant: 60000000,  statut: false },
 ];
 
-const PAGE_SIZE   = 6;
-const emptyForm   = () => ({ num: '', operateur: OPERATEURS_OPT[0], debut: '', fin: '', signature: '', montant: 0, statut: true });
-const fmtMontant  = (n: number) => new Intl.NumberFormat('fr-CI', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n);
+const PAGE_SIZE  = 6;
+const emptyForm  = () => ({ num: '', operateur: OPERATEURS_OPT[0], debut: '', fin: '', signature: '', montant: 0, statut: true });
+const fmtMontant = (n: number) => new Intl.NumberFormat('fr-CI', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n);
+
+const colStyle: React.CSSProperties   = { padding: '4px 8px' };
+const inputStyle: React.CSSProperties = { fontSize: 12, padding: '3px 6px', height: 28 };
 
 const ContratList = () => {
   const router       = useRouter();
@@ -43,21 +46,28 @@ const ContratList = () => {
   const [editing, setEditing] = useState<Contrat | null>(null);
   const [form,    setForm   ] = useState(emptyForm);
 
-  const [search,    setSearch   ] = useState(() => searchParams.get('ct_q')   ?? '');
-  const [operateur, setOperateur] = useState(() => searchParams.get('ct_op')  ?? 'Tous');
-  const [statut,    setStatut   ] = useState(() => searchParams.get('ct_sta') ?? 'Tous');
-  const [page,      setPage     ] = useState(() => Number(searchParams.get('ct_page') ?? '1'));
+  const [fNum,    setFNum   ] = useState(() => searchParams.get('ct_num')   ?? '');
+  const [fOp,     setFOp    ] = useState(() => searchParams.get('ct_op')    ?? '');
+  const [fDebut,  setFDebut ] = useState(() => searchParams.get('ct_debut') ?? '');
+  const [fFin,    setFFin   ] = useState(() => searchParams.get('ct_fin')   ?? '');
+  const [fStatut, setFStatut] = useState(() => searchParams.get('ct_sta')   ?? '');
+  const [page,    setPage   ] = useState(() => Number(searchParams.get('ct_page') ?? '1'));
 
   const pushUrl = (overrides: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
-    Object.entries(overrides).forEach(([k, v]) => { if (v === null || v === '') params.delete(k); else params.set(k, v); });
+    Object.entries(overrides).forEach(([k, v]) => { if (!v) params.delete(k); else params.set(k, v); });
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const pushSearch   = useDebouncedCallback((v: string) => pushUrl({ ct_q: v || null, ct_page: null }), 300);
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => { setSearch(e.target.value); setPage(1); pushSearch(e.target.value); };
-  const handleOp     = (v: string) => { setOperateur(v); setPage(1); pushUrl({ ct_op:  v === 'Tous' ? null : v, ct_page: null }); };
-  const handleStatut = (v: string) => { setStatut(v);    setPage(1); pushUrl({ ct_sta: v === 'Tous' ? null : v, ct_page: null }); };
+  const debNum   = useDebouncedCallback((v: string) => pushUrl({ ct_num:   v || null, ct_page: null }), 300);
+  const debDebut = useDebouncedCallback((v: string) => pushUrl({ ct_debut: v || null, ct_page: null }), 300);
+  const debFin   = useDebouncedCallback((v: string) => pushUrl({ ct_fin:   v || null, ct_page: null }), 300);
+
+  const handleNum    = (v: string) => { setFNum(v);    setPage(1); debNum(v);   };
+  const handleDebut  = (v: string) => { setFDebut(v);  setPage(1); debDebut(v); };
+  const handleFin    = (v: string) => { setFFin(v);    setPage(1); debFin(v);   };
+  const handleOp     = (v: string) => { setFOp(v);     setPage(1); pushUrl({ ct_op:  v || null, ct_page: null }); };
+  const handleStatut = (v: string) => { setFStatut(v); setPage(1); pushUrl({ ct_sta: v || null, ct_page: null }); };
   const handlePage   = (p: number) => { setPage(p); pushUrl({ ct_page: p > 1 ? String(p) : null }); };
 
   const openAdd  = () => { setEditing(null); setForm(emptyForm()); setModal(true); };
@@ -86,13 +96,13 @@ const ContratList = () => {
     setModal(false);
   };
 
-  const filtered = useMemo(() => data.filter((c) => {
-    const q = search.toLowerCase();
-    const matchQ  = c.num.toLowerCase().includes(q) || c.operateur.toLowerCase().includes(q);
-    const matchO  = operateur === 'Tous' || c.operateur === operateur;
-    const matchS  = statut   === 'Tous' || (statut === 'Actif' ? c.statut : !c.statut);
-    return matchQ && matchO && matchS;
-  }), [data, search, operateur, statut]);
+  const filtered = useMemo(() => data.filter((c) => (
+    (!fNum    || c.num.toLowerCase().includes(fNum.toLowerCase())) &&
+    (!fOp     || c.operateur === fOp) &&
+    (!fDebut  || c.debut.includes(fDebut)) &&
+    (!fFin    || c.fin.includes(fFin)) &&
+    (!fStatut || (fStatut === 'Actif' ? c.statut : !c.statut))
+  )), [data, fNum, fOp, fDebut, fFin, fStatut]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -106,30 +116,29 @@ const ContratList = () => {
         </Button>
       </div>
 
-      <Row className='mb-3 g-2'>
-        <Col md='4'>
-          <div className='input-group'>
-            <span className='input-group-text bg-transparent'><Search size={15} className='text-muted' /></span>
-            <Input type='text' placeholder='Rechercher par numéro, opérateur…' value={search} onChange={handleSearch} />
-          </div>
-        </Col>
-        <Col md='3'>
-          <Combobox options={OP_FILTER}     value={OP_FILTER.find((o) => o.value === operateur)  ?? null} onChange={(opt) => handleOp(opt?.value ?? 'Tous')}     isClearable={false} placeholder='Opérateur' />
-        </Col>
-        <Col md='2'>
-          <Combobox options={STATUT_FILTER} value={STATUT_FILTER.find((o) => o.value === statut) ?? null} onChange={(opt) => handleStatut(opt?.value ?? 'Tous')} isClearable={false} placeholder='Statut'    />
-        </Col>
-        <Col md='2' className='text-muted d-flex align-items-center'>
-          <small>{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</small>
-        </Col>
-      </Row>
-
       <Card>
         <CardBody className='p-0'>
           <div className='table-responsive'>
-            <Table className='table table-hover mb-0'>
+            <Table className='table table-hover mb-0' style={{ tableLayout: 'fixed', minWidth: 860 }}>
               <thead className='table-light'>
-                <tr><th>Numéro</th><th>Opérateur</th><th>Début</th><th>Fin</th><th>Montant</th><th>Statut</th><th className='text-end'>Actions</th></tr>
+                <tr>
+                  <th style={{ width: '18%' }}>Numéro</th>
+                  <th style={{ width: '12%' }}>Opérateur</th>
+                  <th style={{ width: '13%' }}>Début</th>
+                  <th style={{ width: '13%' }}>Fin</th>
+                  <th style={{ width: '20%' }}>Montant</th>
+                  <th style={{ width: '12%' }}>Statut</th>
+                  <th style={{ width: '12%' }} className='text-end'>Actions</th>
+                </tr>
+                <tr>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Numéro…' value={fNum}   onChange={(e) => handleNum(e.target.value)}   /></th>
+                  <th style={colStyle}><Combobox options={OP_FILTER} value={OP_FILTER.find((o) => o.value === fOp) ?? OP_FILTER[0]} onChange={(opt) => handleOp(opt?.value ?? '')} isClearable={false} compact /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='AAAA-MM…' value={fDebut} onChange={(e) => handleDebut(e.target.value)} /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='AAAA-MM…' value={fFin}   onChange={(e) => handleFin(e.target.value)}   /></th>
+                  <th style={colStyle} />
+                  <th style={colStyle}><Combobox options={STATUT_FILTER} value={STATUT_FILTER.find((o) => o.value === fStatut) ?? STATUT_FILTER[0]} onChange={(opt) => handleStatut(opt?.value ?? '')} isClearable={false} compact /></th>
+                  <th style={colStyle} />
+                </tr>
               </thead>
               <tbody>
                 {paginated.length === 0 ? (
@@ -151,7 +160,8 @@ const ContratList = () => {
               </tbody>
             </Table>
           </div>
-          <div className='px-3 pb-2'>
+          <div className='px-3 pb-2 d-flex align-items-center justify-content-between'>
+            <small className='text-muted'>{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</small>
             <AppPagination currentPage={page} totalPages={totalPages} onPageChange={handlePage} />
           </div>
         </CardBody>

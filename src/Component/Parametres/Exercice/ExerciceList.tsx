@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Row, Col, Alert } from 'reactstrap';
-import { PlusCircle, Edit2, Trash2, Search } from 'react-feather';
+import { PlusCircle, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -33,8 +33,8 @@ const dureeAns = (num: string): number => {
   return Math.ceil(ms / (365.25 * 24 * 60 * 60 * 1000));
 };
 
-const CONTRAT_FILTER = [{ value: 'Tous', label: 'Tous les contrats' }, ...CONTRATS_OPT];
-const STATUT_FILTER: ComboboxOption[]  = [{ value: 'Tous', label: 'Tous' }, { value: 'EnCours', label: 'En cours' }, { value: 'Cloture', label: 'Clôturé' }];
+const CONTRAT_FILTER  = [{ value: '', label: 'Tous' }, ...CONTRATS_OPT];
+const STATUT_FILTER: ComboboxOption[] = [{ value: '', label: 'Tous' }, { value: 'EnCours', label: 'En cours' }, { value: 'Cloture', label: 'Clôturé' }];
 
 const INITIAL: Exercice[] = [
   { id: 1, lib: 'Exercice 2024', annee: '2024-01-01', cloture: '2024-12-31', statut: false, contrat: 'CTR-2024-001' },
@@ -45,6 +45,9 @@ const INITIAL: Exercice[] = [
 
 const PAGE_SIZE = 6;
 const emptyForm = () => ({ lib: '', annee: '', cloture: '', statut: true, contrat: CONTRATS_OPT[0] });
+
+const colStyle: React.CSSProperties   = { padding: '4px 8px' };
+const inputStyle: React.CSSProperties = { fontSize: 12, padding: '3px 6px', height: 28 };
 
 const ExerciceList = () => {
   const router       = useRouter();
@@ -57,21 +60,28 @@ const ExerciceList = () => {
   const [editing, setEditing] = useState<Exercice | null>(null);
   const [form,    setForm   ] = useState(emptyForm);
 
-  const [search,  setSearch ] = useState(() => searchParams.get('ex_q')   ?? '');
-  const [contrat, setContrat] = useState(() => searchParams.get('ex_ct')  ?? 'Tous');
-  const [statut,  setStatut ] = useState(() => searchParams.get('ex_sta') ?? 'Tous');
+  const [fLib,    setFLib   ] = useState(() => searchParams.get('ex_lib')   ?? '');
+  const [fCt,     setFCt    ] = useState(() => searchParams.get('ex_ct')    ?? '');
+  const [fDebut,  setFDebut ] = useState(() => searchParams.get('ex_debut') ?? '');
+  const [fCloture,setFCloture]=useState(() => searchParams.get('ex_clot')  ?? '');
+  const [fStatut, setFStatut] = useState(() => searchParams.get('ex_sta')   ?? '');
   const [page,    setPage   ] = useState(() => Number(searchParams.get('ex_page') ?? '1'));
 
   const pushUrl = (overrides: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
-    Object.entries(overrides).forEach(([k, v]) => { if (v === null || v === '') params.delete(k); else params.set(k, v); });
+    Object.entries(overrides).forEach(([k, v]) => { if (!v) params.delete(k); else params.set(k, v); });
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const pushSearch   = useDebouncedCallback((v: string) => pushUrl({ ex_q: v || null, ex_page: null }), 300);
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => { setSearch(e.target.value); setPage(1); pushSearch(e.target.value); };
-  const handleContrat = (v: string) => { setContrat(v); setPage(1); pushUrl({ ex_ct:  v === 'Tous' ? null : v, ex_page: null }); };
-  const handleStatut  = (v: string) => { setStatut(v);  setPage(1); pushUrl({ ex_sta: v === 'Tous' ? null : v, ex_page: null }); };
+  const debLib    = useDebouncedCallback((v: string) => pushUrl({ ex_lib:   v || null, ex_page: null }), 300);
+  const debDebut  = useDebouncedCallback((v: string) => pushUrl({ ex_debut: v || null, ex_page: null }), 300);
+  const debCloture= useDebouncedCallback((v: string) => pushUrl({ ex_clot:  v || null, ex_page: null }), 300);
+
+  const handleLib     = (v: string) => { setFLib(v);     setPage(1); debLib(v);     };
+  const handleDebut   = (v: string) => { setFDebut(v);   setPage(1); debDebut(v);   };
+  const handleCloture = (v: string) => { setFCloture(v); setPage(1); debCloture(v); };
+  const handleCt      = (v: string) => { setFCt(v);      setPage(1); pushUrl({ ex_ct:  v || null, ex_page: null }); };
+  const handleStatut  = (v: string) => { setFStatut(v);  setPage(1); pushUrl({ ex_sta: v || null, ex_page: null }); };
   const handlePage    = (p: number) => { setPage(p); pushUrl({ ex_page: p > 1 ? String(p) : null }); };
 
   const openAdd  = () => { setEditing(null); setForm(emptyForm()); setModal(true); };
@@ -86,8 +96,9 @@ const ExerciceList = () => {
     setData((p) => p.filter((e) => e.id !== id));
     log('DELETE', 'Exercice', `Suppression de l'exercice ${target?.lib ?? id}`, target?.lib);
   };
-  const maxExercices = dureeAns(form.contrat.value);
-  const nbExistants  = useMemo(
+
+  const maxExercices  = dureeAns(form.contrat.value);
+  const nbExistants   = useMemo(
     () => data.filter((e) => e.contrat === form.contrat.value && (!editing || e.id !== editing.id)).length,
     [data, form.contrat.value, editing]
   );
@@ -108,13 +119,13 @@ const ExerciceList = () => {
     setModal(false);
   };
 
-  const filtered = useMemo(() => data.filter((e) => {
-    const q = search.toLowerCase();
-    const matchQ  = e.lib.toLowerCase().includes(q) || e.contrat.toLowerCase().includes(q);
-    const matchC  = contrat === 'Tous' || e.contrat === contrat;
-    const matchS  = statut  === 'Tous' || (statut === 'EnCours' ? e.statut : !e.statut);
-    return matchQ && matchC && matchS;
-  }), [data, search, contrat, statut]);
+  const filtered = useMemo(() => data.filter((e) => (
+    (!fLib     || e.lib.toLowerCase().includes(fLib.toLowerCase())) &&
+    (!fCt      || e.contrat === fCt) &&
+    (!fDebut   || e.annee.includes(fDebut)) &&
+    (!fCloture || e.cloture.includes(fCloture)) &&
+    (!fStatut  || (fStatut === 'EnCours' ? e.statut : !e.statut))
+  )), [data, fLib, fCt, fDebut, fCloture, fStatut]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -128,30 +139,27 @@ const ExerciceList = () => {
         </Button>
       </div>
 
-      <Row className='mb-3 g-2'>
-        <Col md='4'>
-          <div className='input-group'>
-            <span className='input-group-text bg-transparent'><Search size={15} className='text-muted' /></span>
-            <Input type='text' placeholder='Rechercher par libellé, contrat…' value={search} onChange={handleSearch} />
-          </div>
-        </Col>
-        <Col md='3'>
-          <Combobox options={CONTRAT_FILTER} value={CONTRAT_FILTER.find((o) => o.value === contrat) ?? null} onChange={(opt) => handleContrat(opt?.value ?? 'Tous')} isClearable={false} placeholder='Contrat' />
-        </Col>
-        <Col md='2'>
-          <Combobox options={STATUT_FILTER}  value={STATUT_FILTER.find((o) => o.value === statut)   ?? null} onChange={(opt) => handleStatut(opt?.value ?? 'Tous')}  isClearable={false} placeholder='Statut'  />
-        </Col>
-        <Col md='2' className='text-muted d-flex align-items-center'>
-          <small>{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</small>
-        </Col>
-      </Row>
-
       <Card>
         <CardBody className='p-0'>
           <div className='table-responsive'>
-            <Table className='table table-hover mb-0'>
+            <Table className='table table-hover mb-0' style={{ tableLayout: 'fixed', minWidth: 800 }}>
               <thead className='table-light'>
-                <tr><th>Libellé</th><th>Contrat</th><th>Début</th><th>Clôture</th><th>Statut</th><th className='text-end'>Actions</th></tr>
+                <tr>
+                  <th style={{ width: '22%' }}>Libellé</th>
+                  <th style={{ width: '24%' }}>Contrat</th>
+                  <th style={{ width: '14%' }}>Début</th>
+                  <th style={{ width: '14%' }}>Clôture</th>
+                  <th style={{ width: '14%' }}>Statut</th>
+                  <th style={{ width: '12%' }} className='text-end'>Actions</th>
+                </tr>
+                <tr>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Libellé…'  value={fLib}     onChange={(e) => handleLib(e.target.value)}     /></th>
+                  <th style={colStyle}><Combobox options={CONTRAT_FILTER} value={CONTRAT_FILTER.find((o) => o.value === fCt) ?? CONTRAT_FILTER[0]} onChange={(opt) => handleCt(opt?.value ?? '')} isClearable={false} compact /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='AAAA-MM…'  value={fDebut}   onChange={(e) => handleDebut(e.target.value)}   /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='AAAA-MM…'  value={fCloture} onChange={(e) => handleCloture(e.target.value)} /></th>
+                  <th style={colStyle}><Combobox options={STATUT_FILTER} value={STATUT_FILTER.find((o) => o.value === fStatut) ?? STATUT_FILTER[0]} onChange={(opt) => handleStatut(opt?.value ?? '')} isClearable={false} compact /></th>
+                  <th style={colStyle} />
+                </tr>
               </thead>
               <tbody>
                 {paginated.length === 0 ? (
@@ -172,7 +180,8 @@ const ExerciceList = () => {
               </tbody>
             </Table>
           </div>
-          <div className='px-3 pb-2'>
+          <div className='px-3 pb-2 d-flex align-items-center justify-content-between'>
+            <small className='text-muted'>{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</small>
             <AppPagination currentPage={page} totalPages={totalPages} onPageChange={handlePage} />
           </div>
         </CardBody>
@@ -182,7 +191,7 @@ const ExerciceList = () => {
         <ModalHeader toggle={() => setModal(false)}>{editing ? "Modifier l'exercice" : 'Ajouter un exercice'}</ModalHeader>
         <ModalBody>
           <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-            <FormGroup><Label>Libellé <span className='text-danger'>*</span></Label><Input value={form.lib} onChange={(e) => setForm((f) => ({ ...f, lib: e.target.value }))} placeholder='Ex: Exercice 2024 S1' /></FormGroup>
+            <FormGroup><Label>Libellé <span className='text-danger'>*</span></Label><Input value={form.lib} onChange={(e) => setForm((f) => ({ ...f, lib: e.target.value }))} placeholder='Ex: Exercice 2024' /></FormGroup>
 
             <Combobox label='Contrat' options={CONTRATS_OPT} value={form.contrat} onChange={(opt) => opt && setForm((f) => ({ ...f, contrat: opt }))} />
 

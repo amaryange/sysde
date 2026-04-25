@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
-import { PlusCircle, Edit2, Trash2, Search } from 'react-feather';
+import { PlusCircle, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -24,12 +24,11 @@ const OPERATEURS_OPT: ComboboxOption[] = [
   { value: 'SAPH',   label: 'SAPH'   },
   { value: 'PALMCI', label: 'PALMCI' },
   { value: 'SOGB',   label: 'SOGB'   },
-  { value: 'FIRCA',  label: 'FIRCA'  },
 ];
 
-const ROLE_FILTER: ComboboxOption[]     = [{ value: 'Tous', label: 'Tous les rôles' }, ...ROLES_OPT];
-const OP_FILTER: ComboboxOption[]       = [{ value: 'Tous', label: 'Tous les opérateurs' }, ...OPERATEURS_OPT];
-const STATUT_FILTER: ComboboxOption[]   = [{ value: 'Tous', label: 'Tous' }, { value: 'Actif', label: 'Actif' }, { value: 'Inactif', label: 'Inactif' }];
+const ROLE_FILTER   = [{ value: '', label: 'Tous' }, ...ROLES_OPT];
+const OP_FILTER     = [{ value: '', label: 'Tous' }, ...OPERATEURS_OPT];
+const STATUT_FILTER: ComboboxOption[] = [{ value: '', label: 'Tous' }, { value: 'Actif', label: 'Actif' }, { value: 'Inactif', label: 'Inactif' }];
 
 const INITIAL: Poste[] = [
   { id: 1, lib: 'Chef Secteur Abengourou',    cde: 'CS-ABG-001', secteur: 'Abengourou',   lot: '1, 2, 3', section: 'A, B', region: 'Indénié-Djuablin', departement: 'Abengourou',   sprefecture: 'Abengourou',   role: 'CS', operateur: 'SAPH',   actif: true  },
@@ -40,8 +39,11 @@ const INITIAL: Poste[] = [
   { id: 6, lib: 'Contrôleur Ordinaire Agni.', cde: 'CO-AGN-001', secteur: 'Agnibilékrou', lot: '8, 9',    section: 'F',    region: 'Indénié-Djuablin', departement: 'Agnibilékrou', sprefecture: 'Agnibilékrou', role: 'CO', operateur: 'SAPH',   actif: true  },
 ];
 
-const PAGE_SIZE   = 6;
-const emptyForm   = () => ({ lib: '', cde: '', secteur: '', lot: '', section: '', region: '', departement: '', sprefecture: '', role: ROLES_OPT[0], operateur: OPERATEURS_OPT[0], actif: true });
+const PAGE_SIZE = 6;
+const emptyForm = () => ({ lib: '', cde: '', secteur: '', lot: '', section: '', region: '', departement: '', sprefecture: '', role: ROLES_OPT[0], operateur: OPERATEURS_OPT[0], actif: true });
+
+const colStyle: React.CSSProperties   = { padding: '4px 8px' };
+const inputStyle: React.CSSProperties = { fontSize: 12, padding: '3px 6px', height: 28 };
 
 const PosteList = () => {
   const router       = useRouter();
@@ -54,23 +56,30 @@ const PosteList = () => {
   const [editing, setEditing] = useState<Poste | null>(null);
   const [form,    setForm   ] = useState(emptyForm);
 
-  const [search,    setSearch   ] = useState(() => searchParams.get('po_q')   ?? '');
-  const [role,      setRole     ] = useState(() => searchParams.get('po_role') ?? 'Tous');
-  const [operateur, setOperateur] = useState(() => searchParams.get('po_op')  ?? 'Tous');
-  const [statut,    setStatut   ] = useState(() => searchParams.get('po_sta') ?? 'Tous');
-  const [page,      setPage     ] = useState(() => Number(searchParams.get('po_page') ?? '1'));
+  const [fCde,    setFCde   ] = useState(() => searchParams.get('po_cde')  ?? '');
+  const [fLib,    setFLib   ] = useState(() => searchParams.get('po_lib')  ?? '');
+  const [fRole,   setFRole  ] = useState(() => searchParams.get('po_role') ?? '');
+  const [fOp,     setFOp    ] = useState(() => searchParams.get('po_op')   ?? '');
+  const [fSec,    setFSec   ] = useState(() => searchParams.get('po_sec')  ?? '');
+  const [fStatut, setFStatut] = useState(() => searchParams.get('po_sta')  ?? '');
+  const [page,    setPage   ] = useState(() => Number(searchParams.get('po_page') ?? '1'));
 
   const pushUrl = (overrides: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
-    Object.entries(overrides).forEach(([k, v]) => { if (v === null || v === '') params.delete(k); else params.set(k, v); });
+    Object.entries(overrides).forEach(([k, v]) => { if (!v) params.delete(k); else params.set(k, v); });
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const pushSearch   = useDebouncedCallback((v: string) => pushUrl({ po_q: v || null, po_page: null }), 300);
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => { setSearch(e.target.value); setPage(1); pushSearch(e.target.value); };
-  const handleRole   = (v: string) => { setRole(v);      setPage(1); pushUrl({ po_role: v === 'Tous' ? null : v, po_page: null }); };
-  const handleOp     = (v: string) => { setOperateur(v); setPage(1); pushUrl({ po_op:   v === 'Tous' ? null : v, po_page: null }); };
-  const handleStatut = (v: string) => { setStatut(v);    setPage(1); pushUrl({ po_sta:  v === 'Tous' ? null : v, po_page: null }); };
+  const debCde = useDebouncedCallback((v: string) => pushUrl({ po_cde: v || null, po_page: null }), 300);
+  const debLib = useDebouncedCallback((v: string) => pushUrl({ po_lib: v || null, po_page: null }), 300);
+  const debSec = useDebouncedCallback((v: string) => pushUrl({ po_sec: v || null, po_page: null }), 300);
+
+  const handleCde    = (v: string) => { setFCde(v);    setPage(1); debCde(v); };
+  const handleLib    = (v: string) => { setFLib(v);    setPage(1); debLib(v); };
+  const handleSec    = (v: string) => { setFSec(v);    setPage(1); debSec(v); };
+  const handleRole   = (v: string) => { setFRole(v);   setPage(1); pushUrl({ po_role: v || null, po_page: null }); };
+  const handleOp     = (v: string) => { setFOp(v);     setPage(1); pushUrl({ po_op:   v || null, po_page: null }); };
+  const handleStatut = (v: string) => { setFStatut(v); setPage(1); pushUrl({ po_sta:  v || null, po_page: null }); };
   const handlePage   = (p: number) => { setPage(p); pushUrl({ po_page: p > 1 ? String(p) : null }); };
 
   const openAdd  = () => { setEditing(null); setForm(emptyForm()); setModal(true); };
@@ -99,14 +108,14 @@ const PosteList = () => {
     setModal(false);
   };
 
-  const filtered = useMemo(() => data.filter((p) => {
-    const q = search.toLowerCase();
-    const matchQ  = p.lib.toLowerCase().includes(q) || p.cde.toLowerCase().includes(q) || p.secteur.toLowerCase().includes(q);
-    const matchR  = role      === 'Tous' || p.role      === role;
-    const matchO  = operateur === 'Tous' || p.operateur === operateur;
-    const matchS  = statut    === 'Tous' || (statut === 'Actif' ? p.actif : !p.actif);
-    return matchQ && matchR && matchO && matchS;
-  }), [data, search, role, operateur, statut]);
+  const filtered = useMemo(() => data.filter((p) => (
+    (!fCde    || p.cde.toLowerCase().includes(fCde.toLowerCase())) &&
+    (!fLib    || p.lib.toLowerCase().includes(fLib.toLowerCase())) &&
+    (!fRole   || p.role === fRole) &&
+    (!fOp     || p.operateur === fOp) &&
+    (!fSec    || p.secteur.toLowerCase().includes(fSec.toLowerCase())) &&
+    (!fStatut || (fStatut === 'Actif' ? p.actif : !p.actif))
+  )), [data, fCde, fLib, fRole, fOp, fSec, fStatut]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -120,33 +129,29 @@ const PosteList = () => {
         </Button>
       </div>
 
-      <Row className='mb-3 g-2'>
-        <Col md='4'>
-          <div className='input-group'>
-            <span className='input-group-text bg-transparent'><Search size={15} className='text-muted' /></span>
-            <Input type='text' placeholder='Rechercher par code, libellé, secteur…' value={search} onChange={handleSearch} />
-          </div>
-        </Col>
-        <Col md='2'>
-          <Combobox options={ROLE_FILTER}   value={ROLE_FILTER.find((o) => o.value === role)      ?? null} onChange={(opt) => handleRole(opt?.value ?? 'Tous')}   isClearable={false} placeholder='Rôle'      />
-        </Col>
-        <Col md='2'>
-          <Combobox options={OP_FILTER}     value={OP_FILTER.find((o) => o.value === operateur)   ?? null} onChange={(opt) => handleOp(opt?.value ?? 'Tous')}     isClearable={false} placeholder='Opérateur' />
-        </Col>
-        <Col md='2'>
-          <Combobox options={STATUT_FILTER} value={STATUT_FILTER.find((o) => o.value === statut)  ?? null} onChange={(opt) => handleStatut(opt?.value ?? 'Tous')} isClearable={false} placeholder='Statut'    />
-        </Col>
-        <Col md='2' className='text-muted d-flex align-items-center'>
-          <small>{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</small>
-        </Col>
-      </Row>
-
       <Card>
         <CardBody className='p-0'>
           <div className='table-responsive'>
-            <Table className='table table-hover mb-0'>
+            <Table className='table table-hover mb-0' style={{ tableLayout: 'fixed', minWidth: 900 }}>
               <thead className='table-light'>
-                <tr><th>Code</th><th>Libellé</th><th>Rôle</th><th>Opérateur</th><th>Secteur</th><th>Statut</th><th className='text-end'>Actions</th></tr>
+                <tr>
+                  <th style={{ width: '11%' }}>Code</th>
+                  <th style={{ width: '24%' }}>Libellé</th>
+                  <th style={{ width: '11%' }}>Rôle</th>
+                  <th style={{ width: '11%' }}>Opérateur</th>
+                  <th style={{ width: '15%' }}>Secteur</th>
+                  <th style={{ width: '10%' }}>Statut</th>
+                  <th style={{ width: '10%' }} className='text-end'>Actions</th>
+                </tr>
+                <tr>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Code…'    value={fCde} onChange={(e) => handleCde(e.target.value)} /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Libellé…' value={fLib} onChange={(e) => handleLib(e.target.value)} /></th>
+                  <th style={colStyle}><Combobox options={ROLE_FILTER}   value={ROLE_FILTER.find((o) => o.value === fRole)   ?? ROLE_FILTER[0]}   onChange={(opt) => handleRole(opt?.value ?? '')}   isClearable={false} compact /></th>
+                  <th style={colStyle}><Combobox options={OP_FILTER}     value={OP_FILTER.find((o) => o.value === fOp)       ?? OP_FILTER[0]}     onChange={(opt) => handleOp(opt?.value ?? '')}     isClearable={false} compact /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Secteur…' value={fSec} onChange={(e) => handleSec(e.target.value)} /></th>
+                  <th style={colStyle}><Combobox options={STATUT_FILTER} value={STATUT_FILTER.find((o) => o.value === fStatut) ?? STATUT_FILTER[0]} onChange={(opt) => handleStatut(opt?.value ?? '')} isClearable={false} compact /></th>
+                  <th style={colStyle} />
+                </tr>
               </thead>
               <tbody>
                 {paginated.length === 0 ? (
@@ -154,7 +159,7 @@ const PosteList = () => {
                 ) : paginated.map((p) => (
                   <tr key={p.id}>
                     <td><code>{p.cde}</code></td>
-                    <td className='f-w-600'>{p.lib}</td>
+                    <td className='f-w-600' style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.lib}</td>
                     <td><Badge color='info' className='badge-light'>{p.role}</Badge></td>
                     <td>{p.operateur}</td>
                     <td className='text-muted'>{p.secteur}</td>
@@ -168,7 +173,8 @@ const PosteList = () => {
               </tbody>
             </Table>
           </div>
-          <div className='px-3 pb-2'>
+          <div className='px-3 pb-2 d-flex align-items-center justify-content-between'>
+            <small className='text-muted'>{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</small>
             <AppPagination currentPage={page} totalPages={totalPages} onPageChange={handlePage} />
           </div>
         </CardBody>
@@ -187,9 +193,9 @@ const PosteList = () => {
               <Col md='6'><Combobox label='Opérateur' options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></Col>
             </Row>
             <Row>
-              <Col md='4'><FormGroup><Label>Secteur</Label>   <Input value={form.secteur}     onChange={(e) => setForm((f) => ({ ...f, secteur: e.target.value }))}     /></FormGroup></Col>
-              <Col md='4'><FormGroup><Label>Lot(s)</Label>    <Input value={form.lot}         onChange={(e) => setForm((f) => ({ ...f, lot: e.target.value }))}         placeholder='Ex: 1, 2, 3' /></FormGroup></Col>
-              <Col md='4'><FormGroup><Label>Section(s)</Label><Input value={form.section}     onChange={(e) => setForm((f) => ({ ...f, section: e.target.value }))}     placeholder='Ex: A, B'    /></FormGroup></Col>
+              <Col md='4'><FormGroup><Label>Secteur</Label>   <Input value={form.secteur}  onChange={(e) => setForm((f) => ({ ...f, secteur: e.target.value }))}     /></FormGroup></Col>
+              <Col md='4'><FormGroup><Label>Lot(s)</Label>    <Input value={form.lot}      onChange={(e) => setForm((f) => ({ ...f, lot: e.target.value }))}          placeholder='Ex: 1, 2, 3' /></FormGroup></Col>
+              <Col md='4'><FormGroup><Label>Section(s)</Label><Input value={form.section}  onChange={(e) => setForm((f) => ({ ...f, section: e.target.value }))}      placeholder='Ex: A, B'    /></FormGroup></Col>
             </Row>
             <Row>
               <Col md='4'><FormGroup><Label>Région</Label>         <Input value={form.region}      onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}      /></FormGroup></Col>
