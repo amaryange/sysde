@@ -60,12 +60,10 @@ const ContratList = () => {
   };
 
   const debNum   = useDebouncedCallback((v: string) => pushUrl({ ct_num:   v || null, ct_page: null }), 300);
-  const debDebut = useDebouncedCallback((v: string) => pushUrl({ ct_debut: v || null, ct_page: null }), 300);
-  const debFin   = useDebouncedCallback((v: string) => pushUrl({ ct_fin:   v || null, ct_page: null }), 300);
 
   const handleNum    = (v: string) => { setFNum(v);    setPage(1); debNum(v);   };
-  const handleDebut  = (v: string) => { setFDebut(v);  setPage(1); debDebut(v); };
-  const handleFin    = (v: string) => { setFFin(v);    setPage(1); debFin(v);   };
+  const handleDebut  = (v: string) => { setFDebut(v);  setPage(1); pushUrl({ ct_debut: v || null, ct_page: null }); };
+  const handleFin    = (v: string) => { setFFin(v);    setPage(1); pushUrl({ ct_fin:   v || null, ct_page: null }); };
   const handleOp     = (v: string) => { setFOp(v);     setPage(1); pushUrl({ ct_op:  v || null, ct_page: null }); };
   const handleStatut = (v: string) => { setFStatut(v); setPage(1); pushUrl({ ct_sta: v || null, ct_page: null }); };
   const handlePage   = (p: number) => { setPage(p); pushUrl({ ct_page: p > 1 ? String(p) : null }); };
@@ -99,8 +97,8 @@ const ContratList = () => {
   const filtered = useMemo(() => data.filter((c) => (
     (!fNum    || c.num.toLowerCase().includes(fNum.toLowerCase())) &&
     (!fOp     || c.operateur === fOp) &&
-    (!fDebut  || c.debut.includes(fDebut)) &&
-    (!fFin    || c.fin.includes(fFin)) &&
+    (!fDebut  || c.debut === fDebut) &&
+    (!fFin    || c.fin === fFin) &&
     (!fStatut || (fStatut === 'Actif' ? c.statut : !c.statut))
   )), [data, fNum, fOp, fDebut, fFin, fStatut]);
 
@@ -133,8 +131,8 @@ const ContratList = () => {
                 <tr>
                   <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Numéro…' value={fNum}   onChange={(e) => handleNum(e.target.value)}   /></th>
                   <th style={colStyle}><Combobox options={OP_FILTER} value={OP_FILTER.find((o) => o.value === fOp) ?? OP_FILTER[0]} onChange={(opt) => handleOp(opt?.value ?? '')} isClearable={false} compact /></th>
-                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='AAAA-MM…' value={fDebut} onChange={(e) => handleDebut(e.target.value)} /></th>
-                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='AAAA-MM…' value={fFin}   onChange={(e) => handleFin(e.target.value)}   /></th>
+                  <th style={colStyle}><DateInput compact value={fDebut} onChange={handleDebut} /></th>
+                  <th style={colStyle}><DateInput compact value={fFin}   onChange={handleFin}   /></th>
                   <th style={colStyle} />
                   <th style={colStyle}><Combobox options={STATUT_FILTER} value={STATUT_FILTER.find((o) => o.value === fStatut) ?? STATUT_FILTER[0]} onChange={(opt) => handleStatut(opt?.value ?? '')} isClearable={false} compact /></th>
                   <th style={colStyle} />
