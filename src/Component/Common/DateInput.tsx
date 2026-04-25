@@ -50,6 +50,7 @@ interface DateInputProps {
   maxDate?:     string;
   error?:       string;
   className?:   string;
+  compact?:     boolean;
 }
 
 const toDate   = (s?: string) => (s ? new Date(s) : null);
@@ -63,20 +64,20 @@ const fromDate = (d: Date | null): string => {
 
 const CustomInput = forwardRef<
   HTMLInputElement,
-  React.InputHTMLAttributes<HTMLInputElement> & { onClear?: () => void; showClear?: boolean }
->(({ value, onClick, placeholder, disabled, onClear, showClear }, ref) => (
+  React.InputHTMLAttributes<HTMLInputElement> & { onClear?: () => void; showClear?: boolean; compact?: boolean }
+>(({ value, onClick, placeholder, disabled, onClear, showClear, compact }, ref) => (
   <div style={{ position: 'relative' }}>
     <input
       ref={ref}
       type='text'
-      className='form-control'
+      className={`form-control${compact ? ' form-control-sm' : ''}`}
       value={value as string}
       onClick={onClick}
       onChange={() => {}}
       placeholder={placeholder}
       disabled={disabled}
       readOnly
-      style={{ paddingRight: showClear ? '3.5rem' : '2.25rem', cursor: disabled ? 'not-allowed' : 'pointer' }}
+      style={{ paddingRight: showClear ? '3.5rem' : '2.25rem', cursor: disabled ? 'not-allowed' : 'pointer', ...(compact ? { height: 28, fontSize: 12 } : {}) }}
     />
     {showClear && (
       <button
@@ -104,12 +105,12 @@ const NavBtn = ({ onClick, children }: { onClick: () => void; children: React.Re
   </button>
 );
 
-const DateInput = ({ label, value, onChange, placeholder = 'jj/mm/aaaa', required, disabled, minDate, maxDate, error, className }: DateInputProps) => {
+const DateInput = ({ label, value, onChange, placeholder = 'jj/mm/aaaa', required, disabled, minDate, maxDate, error, className, compact }: DateInputProps) => {
   const hasError  = Boolean(error);
   const showClear = !required && !disabled && Boolean(value);
 
   return (
-    <div className={`mb-2 sysde-date-wrap ${className ?? ''}`}>
+    <div className={`${compact ? '' : 'mb-2'} sysde-date-wrap ${className ?? ''}`}>
       {label && (
         <Label className='col-form-label'>
           {label}
@@ -189,7 +190,7 @@ const DateInput = ({ label, value, onChange, placeholder = 'jj/mm/aaaa', require
       <DatePicker
         selected={toDate(value)}
         onChange={(d) => onChange(fromDate(d))}
-        customInput={<CustomInput disabled={disabled} showClear={showClear} onClear={() => onChange('')} />}
+        customInput={<CustomInput disabled={disabled} showClear={showClear} onClear={() => onChange('')} compact={compact} />}
         dateFormat='dd/MM/yyyy'
         placeholderText={placeholder}
         disabled={disabled}
