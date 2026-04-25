@@ -28,7 +28,7 @@ const TachesContainer = () => {
               onClick={() => setActiveTab('collaborateur')}
               style={{ cursor: 'pointer', color: activeTab === 'collaborateur' ? undefined : isDark ? '#9ca3af' : undefined }}
             >
-              Collaborateur
+              {"Chef de département"}
             </NavLink>
           </NavItem>
         </Nav>
