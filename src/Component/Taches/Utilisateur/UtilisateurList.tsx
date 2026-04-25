@@ -16,14 +16,20 @@ const OPERATEURS_OPT: ComboboxOption[] = [
   { value: 'APROMAC', label: 'APROMAC' },
 ];
 
-const POSTES_OPT: ComboboxOption[] = [
-  { value: 'AD-FIRCA-001', label: 'AD-FIRCA-001 — Administrateur FIRCA'   },
-  { value: 'DI-FIRCA-001', label: 'DI-FIRCA-001 — Directeur FIRCA'        },
-  { value: 'SU-FIRCA-001', label: 'SU-FIRCA-001 — Superviseur FIRCA'      },
-  { value: 'AD-APR-001',   label: 'AD-APR-001 — Administrateur APROMAC'   },
-  { value: 'DI-APR-001',   label: 'DI-APR-001 — Directeur APROMAC'       },
-  { value: 'SU-APR-001',   label: 'SU-APR-001 — Superviseur APROMAC'     },
-];
+const POSTES_PAR_OP: Record<string, ComboboxOption[]> = {
+  FIRCA:   [
+    { value: 'AD-FIRCA-001', label: 'AD-FIRCA-001 — Administrateur FIRCA' },
+    { value: 'DI-FIRCA-001', label: 'DI-FIRCA-001 — Directeur FIRCA'      },
+    { value: 'SU-FIRCA-001', label: 'SU-FIRCA-001 — Superviseur FIRCA'    },
+  ],
+  APROMAC: [
+    { value: 'AD-APR-001', label: 'AD-APR-001 — Administrateur APROMAC' },
+    { value: 'DI-APR-001', label: 'DI-APR-001 — Directeur APROMAC'      },
+    { value: 'SU-APR-001', label: 'SU-APR-001 — Superviseur APROMAC'    },
+  ],
+};
+
+const POSTES_OPT = Object.values(POSTES_PAR_OP).flat();
 
 const GENRES_OPT: ComboboxOption[] = [
   { value: 'M', label: 'Masculin' },
@@ -220,8 +226,8 @@ const UtilisateurNonEncadreurList = () => {
               <Col md='4'><FormGroup><Label>Matricule <span className='text-danger'>*</span></Label><Input value={form.mat} onChange={(e) => setForm((f) => ({ ...f, mat: e.target.value }))} placeholder='AD001' /></FormGroup></Col>
             </Row>
             <Row>
-              <Col md='6'><Combobox label={"Opérateur (non-encadreur)"} options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></Col>
-              <Col md='6'><Combobox label='Poste' options={POSTES_OPT} value={form.poste} onChange={(opt) => opt && setForm((f) => ({ ...f, poste: opt }))} /></Col>
+              <Col md='6'><Combobox label={"Opérateur (non-encadreur)"} options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => { if (!opt) return; const postes = POSTES_PAR_OP[opt.value] ?? []; setForm((f) => ({ ...f, operateur: opt, poste: postes[0] ?? f.poste })); }} /></Col>
+              <Col md='6'><Combobox label='Poste' options={POSTES_PAR_OP[form.operateur.value] ?? []} value={form.poste} onChange={(opt) => opt && setForm((f) => ({ ...f, poste: opt }))} /></Col>
             </Row>
             <Row>
               <Col md='6'><FormGroup><Label>Email</Label>         <Input type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='user@firca.ci'     /></FormGroup></Col>
