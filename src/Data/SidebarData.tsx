@@ -27,7 +27,7 @@ export const MENUITEMS: MenuItem[] = [
         active: false,
       },
       {
-        title: 'Analytics',
+        title: 'Reporting',
         icon: <BarChart2 />,
         type: 'link',
         path: `/analytics`,
@@ -41,7 +41,7 @@ export const MENUITEMS: MenuItem[] = [
         active: false,
       },
       {
-        title: 'Réglages',
+        title: 'Compte',
         icon: <Sliders />,
         type: 'link',
         path: `/reglages`,

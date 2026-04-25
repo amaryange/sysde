@@ -51,7 +51,7 @@ const AnalyticsContainer = () => (
 
     {/* En-tête */}
     <div>
-      <h4 style={{ margin: '0 0 4px', fontWeight: 700 }}>Analytics</h4>
+      <h4 style={{ margin: '0 0 4px', fontWeight: 700 }}>Reporting</h4>
       <p style={{ margin: 0, color: '#9ca3af', fontSize: 13 }}>Indicateurs de pilotage — Exercice 2024</p>
     </div>
 

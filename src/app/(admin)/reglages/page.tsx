@@ -133,7 +133,7 @@ const ReglagesPage = () => {
 
   return (
     <div className='container-fluid p-4'>
-      <h4 className='mb-4'>Réglages</h4>
+      <h4 className='mb-4'>Compte</h4>
       <Row className='g-4'>
 
         {/* Photo de profil */}
