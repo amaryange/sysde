@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
-import { UserPlus, Edit2, Trash2 } from 'react-feather';
+import { UserPlus, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -43,6 +43,7 @@ const OperateurList = () => {
   const [data,    setData   ] = useState<Operateur[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<Operateur | null>(null);
+  const [viewing, setViewing] = useState(false);
   const [form,    setForm   ] = useState(emptyForm);
 
   const [fRs,    setFRs   ] = useState(() => searchParams.get('op_rs')    ?? '');
@@ -70,8 +71,9 @@ const OperateurList = () => {
   const handleEnc   = (v: string) => { setFEnc(v);    setPage(1); pushUrl({ op_enc: v || null, op_page: null }); };
   const handlePage  = (p: number) => { setPage(p); pushUrl({ op_page: p > 1 ? String(p) : null }); };
 
-  const openAdd  = () => { setEditing(null); setForm(emptyForm()); setModal(true); };
-  const openEdit = (o: Operateur) => { setEditing(o); setForm({ rs: o.rs, acronyme: o.acronyme, adresse: o.adresse, email: o.email, tel: o.tel, encadreur: o.encadreur }); setModal(true); };
+  const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
+  const openEdit = (o: Operateur) => { setViewing(false); setEditing(o); setForm({ rs: o.rs, acronyme: o.acronyme, adresse: o.adresse, email: o.email, tel: o.tel, encadreur: o.encadreur }); setModal(true); };
+  const openView = (o: Operateur) => { setViewing(true);  setEditing(null); setForm({ rs: o.rs, acronyme: o.acronyme, adresse: o.adresse, email: o.email, tel: o.tel, encadreur: o.encadreur }); setModal(true); };
   const handleDelete = (id: number) => {
     if (!window.confirm('Supprimer cet opérateur ?')) return;
     const target = data.find((o) => o.id === id);
@@ -144,6 +146,7 @@ const OperateurList = () => {
                     <td className='text-muted'>{o.tel}</td>
                     <td><Badge color={o.encadreur ? 'success' : 'secondary'} className='badge-light'>{o.encadreur ? 'Oui' : 'Non'}</Badge></td>
                     <td className='text-end'>
+                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openView(o)}><Eye size={14} /></Button>
                       <Button color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(o)}><Edit2 size={14} /></Button>
                       <Button color='light' size='sm' className='p-1' onClick={() => handleDelete(o.id)}><Trash2 size={14} className='text-danger' /></Button>
                     </td>
@@ -162,27 +165,28 @@ const OperateurList = () => {
       <AppDrawer
         isOpen={modal}
         toggle={() => setModal(false)}
-        title={editing ? "Modifier l'opérateur" : 'Ajouter un opérateur'}
-        onSave={handleSave}
+        title={viewing ? "Détails de l'opérateur" : editing ? "Modifier l'opérateur" : 'Ajouter un opérateur'}
+        onSave={viewing ? undefined : handleSave}
         onCancel={() => setModal(false)}
+        cancelLabel={viewing ? 'Fermer' : 'Annuler'}
       >
         <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
           <p className='text-muted fw-semibold small mb-2'>Identification</p>
-          <FormGroup><Label>Raison sociale <span className='text-danger'>*</span></Label><Input value={form.rs}       onChange={(e) => setForm((f) => ({ ...f, rs: e.target.value }))}       placeholder='Ex: SOCIETE AFRICAINE DE PLANTATION DHEVEA' /></FormGroup>
-          <FormGroup><Label>Acronyme <span className='text-danger'>*</span></Label>      <Input value={form.acronyme} onChange={(e) => setForm((f) => ({ ...f, acronyme: e.target.value }))} placeholder='Ex: SAPH' /></FormGroup>
+          <FormGroup><Label>Raison sociale <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.rs}       onChange={(e) => setForm((f) => ({ ...f, rs: e.target.value }))}       placeholder='Ex: SOCIETE AFRICAINE DE PLANTATION DHEVEA' /></FormGroup>
+          <FormGroup><Label>Acronyme <span className='text-danger'>*</span></Label>      <Input disabled={viewing} value={form.acronyme} onChange={(e) => setForm((f) => ({ ...f, acronyme: e.target.value }))} placeholder='Ex: SAPH' /></FormGroup>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Coordonnées</p>
-          <FormGroup><Label>Adresse</Label><Input value={form.adresse} onChange={(e) => setForm((f) => ({ ...f, adresse: e.target.value }))} /></FormGroup>
+          <FormGroup><Label>Adresse</Label><Input disabled={viewing} value={form.adresse} onChange={(e) => setForm((f) => ({ ...f, adresse: e.target.value }))} /></FormGroup>
           <Row>
-            <Col md='6'><FormGroup><Label>Email</Label>    <Input type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='contact@exemple.ci' /></FormGroup></Col>
-            <Col md='6'><FormGroup><Label>Téléphone</Label><Input             value={form.tel}   onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))}   placeholder='0X XX XX XX'         /></FormGroup></Col>
+            <Col md='6'><FormGroup><Label>Email</Label>    <Input disabled={viewing} type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='contact@exemple.ci' /></FormGroup></Col>
+            <Col md='6'><FormGroup><Label>Téléphone</Label><Input disabled={viewing}             value={form.tel}   onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))}   placeholder='0X XX XX XX'         /></FormGroup></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Statut</p>
           <FormGroup check>
-            <Input type='checkbox' checked={form.encadreur} onChange={(e) => setForm((f) => ({ ...f, encadreur: e.target.checked }))} />
+            <Input disabled={viewing} type='checkbox' checked={form.encadreur} onChange={(e) => setForm((f) => ({ ...f, encadreur: e.target.checked }))} />
             <Label check>Opérateur d'encadrement</Label>
           </FormGroup>
         </Form>
