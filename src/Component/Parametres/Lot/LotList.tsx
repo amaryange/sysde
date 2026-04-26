@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
+import ConfirmDelete from '@/Component/Common/ConfirmDelete';
 import { PlusCircle, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
@@ -48,8 +49,9 @@ const LotList = () => {
   const [data,    setData   ] = useState<Lot[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<Lot | null>(null);
-  const [viewing, setViewing] = useState(false);
-  const [form,    setForm   ] = useState(emptyForm);
+  const [viewing,      setViewing     ] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Lot | null>(null);
+  const [form,         setForm        ] = useState(emptyForm);
 
   const [fNum,  setFNum  ] = useState(() => searchParams.get('lt_num') ?? '');
   const [fCde,  setFCde  ] = useState(() => searchParams.get('lt_cde') ?? '');
@@ -80,11 +82,11 @@ const LotList = () => {
   const fillForm = (l: Lot) => ({ num: l.num, cde: l.cde, couverture: l.couverture, region: l.region, departement: l.departement, sprefecture: l.sprefecture, secteur: SECTEURS_OPT.find((s) => s.value === l.secteur) ?? SECTEURS_OPT[0] });
   const openEdit = (l: Lot) => { setViewing(false); setEditing(l); setForm(fillForm(l)); setModal(true); };
   const openView = (l: Lot) => { setViewing(true);  setEditing(null); setForm(fillForm(l)); setModal(true); };
-  const handleDelete = (id: number) => {
-    if (!window.confirm('Supprimer ce lot ?')) return;
-    const target = data.find((l) => l.id === id);
-    setData((p) => p.filter((l) => l.id !== id));
-    log('DELETE', 'Lot', `Suppression du lot ${target?.cde ?? id} — ${target?.couverture ?? ''}`, target?.cde);
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    setData((p) => p.filter((l) => l.id !== deleteTarget.id));
+    log('DELETE', 'Lot', `Suppression du lot ${deleteTarget.cde} — ${deleteTarget.couverture}`, deleteTarget.cde);
+    setDeleteTarget(null);
   };
   const handleSave = () => {
     if (!form.num.trim() || !form.cde.trim()) return;
@@ -157,7 +159,7 @@ const LotList = () => {
                       <UncontrolledTooltip target={`lt-view-${l.id}`}>Consulter</UncontrolledTooltip>
                       <Button id={`lt-edit-${l.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(l)}><Edit2 size={14} /></Button>
                       <UncontrolledTooltip target={`lt-edit-${l.id}`}>Modifier</UncontrolledTooltip>
-                      <Button id={`lt-del-${l.id}`} color='light' size='sm' className='p-1' onClick={() => handleDelete(l.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <Button id={`lt-del-${l.id}`} color='light' size='sm' className='p-1' onClick={() => setDeleteTarget(l)}><Trash2 size={14} className='text-danger' /></Button>
                       <UncontrolledTooltip target={`lt-del-${l.id}`}>Supprimer</UncontrolledTooltip>
                     </td>
                   </tr>
@@ -201,6 +203,13 @@ const LotList = () => {
           </Row>
         </Form>
       </AppDrawer>
+
+      <ConfirmDelete
+        isOpen={!!deleteTarget}
+        message={`Voulez-vous vraiment supprimer le lot "${deleteTarget?.cde}" ? Cette action est irréversible.`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };
