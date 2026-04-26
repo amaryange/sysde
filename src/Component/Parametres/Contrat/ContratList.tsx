@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import AppDrawer from '@/Component/Common/AppDrawer';
 import { PlusCircle, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
@@ -165,31 +166,40 @@ const ContratList = () => {
         </CardBody>
       </Card>
 
-      <Modal isOpen={modal} toggle={() => setModal(false)}>
-        <ModalHeader toggle={() => setModal(false)}>{editing ? 'Modifier le contrat' : 'Ajouter un contrat'}</ModalHeader>
-        <ModalBody>
-          <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-            <Row>
-              <Col md='6'><FormGroup><Label>Numéro contrat <span className='text-danger'>*</span></Label><Input value={form.num} onChange={(e) => setForm((f) => ({ ...f, num: e.target.value }))} placeholder='CTR-2024-001' /></FormGroup></Col>
-              <Col md='6'><Combobox label='Opérateur' options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></Col>
-            </Row>
-            <Row>
-              <Col md='4'><DateInput label='Début'     required value={form.debut}     onChange={(v) => setForm((f) => ({ ...f, debut: v }))}     /></Col>
-              <Col md='4'><DateInput label='Fin'       required value={form.fin}       onChange={(v) => setForm((f) => ({ ...f, fin: v }))}       /></Col>
-              <Col md='4'><DateInput label='Signature'          value={form.signature} onChange={(v) => setForm((f) => ({ ...f, signature: v }))} /></Col>
-            </Row>
-            <FormGroup><Label>Montant (FCFA)</Label><Input type='number' min={0} value={form.montant} onChange={(e) => setForm((f) => ({ ...f, montant: Number(e.target.value) }))} /></FormGroup>
-            <FormGroup check>
-              <Input type='checkbox' checked={form.statut} onChange={(e) => setForm((f) => ({ ...f, statut: e.target.checked }))} />
-              <Label check>Contrat actif</Label>
-            </FormGroup>
-          </Form>
-        </ModalBody>
-        <ModalFooter>
-          <Button color='primary' onClick={handleSave}>Enregistrer</Button>
-          <Button color='light' onClick={() => setModal(false)}>Annuler</Button>
-        </ModalFooter>
-      </Modal>
+      <AppDrawer
+        isOpen={modal}
+        toggle={() => setModal(false)}
+        title={editing ? 'Modifier le contrat' : 'Ajouter un contrat'}
+        onSave={handleSave}
+        onCancel={() => setModal(false)}
+      >
+        <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+          <p className='text-muted fw-semibold small mb-2'>Identification</p>
+          <Row>
+            <Col md='6'><FormGroup><Label>Numéro contrat <span className='text-danger'>*</span></Label><Input value={form.num} onChange={(e) => setForm((f) => ({ ...f, num: e.target.value }))} placeholder='CTR-2024-001' /></FormGroup></Col>
+            <Col md='6'><Combobox label='Opérateur' options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></Col>
+          </Row>
+
+          <hr style={{ borderColor: 'transparent' }} />
+          <p className='text-muted fw-semibold small mb-2'>Période</p>
+          <Row>
+            <Col md='4'><DateInput label='Début'     required value={form.debut}     onChange={(v) => setForm((f) => ({ ...f, debut: v }))}     /></Col>
+            <Col md='4'><DateInput label='Fin'       required value={form.fin}       onChange={(v) => setForm((f) => ({ ...f, fin: v }))}       /></Col>
+            <Col md='4'><DateInput label='Signature'          value={form.signature} onChange={(v) => setForm((f) => ({ ...f, signature: v }))} /></Col>
+          </Row>
+
+          <hr style={{ borderColor: 'transparent' }} />
+          <p className='text-muted fw-semibold small mb-2'>Financier</p>
+          <FormGroup><Label>Montant (FCFA)</Label><Input type='number' min={0} value={form.montant} onChange={(e) => setForm((f) => ({ ...f, montant: Number(e.target.value) }))} /></FormGroup>
+
+          <hr style={{ borderColor: 'transparent' }} />
+          <p className='text-muted fw-semibold small mb-2'>Statut</p>
+          <FormGroup check>
+            <Input type='checkbox' checked={form.statut} onChange={(e) => setForm((f) => ({ ...f, statut: e.target.checked }))} />
+            <Label check>Contrat actif</Label>
+          </FormGroup>
+        </Form>
+      </AppDrawer>
     </div>
   );
 };
