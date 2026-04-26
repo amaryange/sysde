@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
+import ConfirmDelete from '@/Component/Common/ConfirmDelete';
 import { PlusCircle, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
@@ -55,8 +56,9 @@ const PosteList = () => {
   const [data,    setData   ] = useState<Poste[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<Poste | null>(null);
-  const [viewing, setViewing] = useState(false);
-  const [form,    setForm   ] = useState(emptyForm);
+  const [viewing,      setViewing     ] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Poste | null>(null);
+  const [form,         setForm        ] = useState(emptyForm);
 
   const [fCde,    setFCde   ] = useState(() => searchParams.get('po_cde')  ?? '');
   const [fLib,    setFLib   ] = useState(() => searchParams.get('po_lib')  ?? '');
@@ -88,11 +90,11 @@ const PosteList = () => {
   const fillForm = (p: Poste) => ({ lib: p.lib, cde: p.cde, secteur: p.secteur, lot: p.lot, section: p.section, region: p.region, departement: p.departement, sprefecture: p.sprefecture, actif: p.actif, role: ROLES_OPT.find((r) => r.value === p.role) ?? ROLES_OPT[0], operateur: OPERATEURS_OPT.find((o) => o.value === p.operateur) ?? OPERATEURS_OPT[0] });
   const openEdit = (p: Poste) => { setViewing(false); setEditing(p); setForm(fillForm(p)); setModal(true); };
   const openView = (p: Poste) => { setViewing(true);  setEditing(null); setForm(fillForm(p)); setModal(true); };
-  const handleDelete = (id: number) => {
-    if (!window.confirm('Supprimer ce poste ?')) return;
-    const target = data.find((p) => p.id === id);
-    setData((prev) => prev.filter((p) => p.id !== id));
-    log('DELETE', 'Poste', `Suppression du poste ${target?.cde ?? id}`, target?.cde);
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    setData((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+    log('DELETE', 'Poste', `Suppression du poste ${deleteTarget.cde}`, deleteTarget.cde);
+    setDeleteTarget(null);
   };
   const handleSave = () => {
     if (!form.cde.trim()) return;
@@ -169,7 +171,7 @@ const PosteList = () => {
                       <UncontrolledTooltip target={`po-view-${p.id}`}>Consulter</UncontrolledTooltip>
                       <Button id={`po-edit-${p.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(p)}><Edit2 size={14} /></Button>
                       <UncontrolledTooltip target={`po-edit-${p.id}`}>Modifier</UncontrolledTooltip>
-                      <Button id={`po-del-${p.id}`} color='light' size='sm' className='p-1' onClick={() => handleDelete(p.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <Button id={`po-del-${p.id}`} color='light' size='sm' className='p-1' onClick={() => setDeleteTarget(p)}><Trash2 size={14} className='text-danger' /></Button>
                       <UncontrolledTooltip target={`po-del-${p.id}`}>Supprimer</UncontrolledTooltip>
                     </td>
                   </tr>
@@ -227,6 +229,13 @@ const PosteList = () => {
           </FormGroup>
         </Form>
       </AppDrawer>
+
+      <ConfirmDelete
+        isOpen={!!deleteTarget}
+        message={`Voulez-vous vraiment supprimer le poste "${deleteTarget?.cde}" ? Cette action est irréversible.`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };
