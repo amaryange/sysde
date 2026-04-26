@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import { Card, CardBody, Table, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
 import { PlusCircle, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -153,9 +153,12 @@ const LotList = () => {
                     <td className='text-muted'>{l.secteur}</td>
                     <td className='text-muted'>{l.departement}</td>
                     <td className='text-end'>
-                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openView(l)}><Eye size={14} /></Button>
-                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(l)}><Edit2 size={14} /></Button>
-                      <Button color='light' size='sm' className='p-1' onClick={() => handleDelete(l.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <Button id={`lt-view-${l.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openView(l)}><Eye size={14} /></Button>
+                      <UncontrolledTooltip target={`lt-view-${l.id}`}>Consulter</UncontrolledTooltip>
+                      <Button id={`lt-edit-${l.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(l)}><Edit2 size={14} /></Button>
+                      <UncontrolledTooltip target={`lt-edit-${l.id}`}>Modifier</UncontrolledTooltip>
+                      <Button id={`lt-del-${l.id}`} color='light' size='sm' className='p-1' onClick={() => handleDelete(l.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <UncontrolledTooltip target={`lt-del-${l.id}`}>Supprimer</UncontrolledTooltip>
                     </td>
                   </tr>
                 ))}
