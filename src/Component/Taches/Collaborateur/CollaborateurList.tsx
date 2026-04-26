@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
+import ConfirmDelete from '@/Component/Common/ConfirmDelete';
 import { UserPlus, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
@@ -53,8 +54,9 @@ const ChefDepartementList = () => {
   const [data,    setData   ] = useState<ChefDepartement[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<ChefDepartement | null>(null);
-  const [viewing, setViewing] = useState(false);
-  const [form,    setForm   ] = useState<ReturnType<typeof emptyForm>>(emptyForm);
+  const [viewing,      setViewing     ] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ChefDepartement | null>(null);
+  const [form,         setForm        ] = useState<ReturnType<typeof emptyForm>>(emptyForm);
 
   const [fNom,    setFNom   ] = useState(() => searchParams.get('cd_nom')   ?? '');
   const [fMat,    setFMat   ] = useState(() => searchParams.get('cd_mat')   ?? '');
@@ -90,11 +92,11 @@ const ChefDepartementList = () => {
   const fillForm = (u: ChefDepartement) => ({ nom: u.nom, prenoms: u.prenoms, nat: u.nat, mat: u.mat, mdp: '', email: u.email, tel: u.tel, actif: u.actif, genre: GENRES_OPT.find((g) => g.value === u.genre) ?? GENRES_OPT[0], poste: POSTES_OPT.find((p) => p.value === u.poste) ?? POSTES_OPT[0], operateur: OPERATEURS_OPT.find((o) => o.value === u.operateur) ?? OPERATEURS_OPT[0] });
   const openEdit = (u: ChefDepartement) => { setViewing(false); setEditing(u); setForm(fillForm(u)); setModal(true); };
   const openView = (u: ChefDepartement) => { setViewing(true);  setEditing(null); setForm(fillForm(u)); setModal(true); };
-  const handleDelete = (id: number) => {
-    if (!window.confirm('Supprimer ce chef de département ?')) return;
-    const target = data.find((u) => u.id === id);
-    setData((p) => p.filter((u) => u.id !== id));
-    log('DELETE', 'Utilisateur', `Suppression du chef de département ${target?.nom ?? ''} ${target?.prenoms ?? ''} (${target?.mat ?? id})`, target?.mat);
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    setData((p) => p.filter((u) => u.id !== deleteTarget.id));
+    log('DELETE', 'Utilisateur', `Suppression du chef de département ${deleteTarget.nom} ${deleteTarget.prenoms} (${deleteTarget.mat})`, deleteTarget.mat);
+    setDeleteTarget(null);
   };
   const handleSave = () => {
     if (!form.nom.trim() || !form.mat.trim()) return;
@@ -192,7 +194,7 @@ const ChefDepartementList = () => {
                       <UncontrolledTooltip target={`cd-view-${u.id}`}>Consulter</UncontrolledTooltip>
                       <Button id={`cd-edit-${u.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(u)}><Edit2 size={14} /></Button>
                       <UncontrolledTooltip target={`cd-edit-${u.id}`}>Modifier</UncontrolledTooltip>
-                      <Button id={`cd-del-${u.id}`} color='light' size='sm' className='p-1' onClick={() => handleDelete(u.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <Button id={`cd-del-${u.id}`} color='light' size='sm' className='p-1' onClick={() => setDeleteTarget(u)}><Trash2 size={14} className='text-danger' /></Button>
                       <UncontrolledTooltip target={`cd-del-${u.id}`}>Supprimer</UncontrolledTooltip>
                     </td>
                   </tr>
@@ -306,6 +308,13 @@ const ChefDepartementList = () => {
 
           </Form>
       </AppDrawer>
+
+      <ConfirmDelete
+        isOpen={!!deleteTarget}
+        message={`Voulez-vous vraiment supprimer le chef de département "${deleteTarget?.nom} ${deleteTarget?.prenoms}" ? Cette action est irréversible.`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };
