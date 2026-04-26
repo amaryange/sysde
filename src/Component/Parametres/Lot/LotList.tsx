@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
-import { PlusCircle, Edit2, Trash2 } from 'react-feather';
+import { PlusCircle, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -48,6 +48,7 @@ const LotList = () => {
   const [data,    setData   ] = useState<Lot[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<Lot | null>(null);
+  const [viewing, setViewing] = useState(false);
   const [form,    setForm   ] = useState(emptyForm);
 
   const [fNum,  setFNum  ] = useState(() => searchParams.get('lt_num') ?? '');
@@ -75,12 +76,10 @@ const LotList = () => {
   const handleSec  = (v: string) => { setFSec(v);  setPage(1); pushUrl({ lt_sec: v || null, lt_page: null }); };
   const handlePage = (p: number) => { setPage(p); pushUrl({ lt_page: p > 1 ? String(p) : null }); };
 
-  const openAdd  = () => { setEditing(null); setForm(emptyForm()); setModal(true); };
-  const openEdit = (l: Lot) => {
-    setEditing(l);
-    setForm({ num: l.num, cde: l.cde, couverture: l.couverture, region: l.region, departement: l.departement, sprefecture: l.sprefecture, secteur: SECTEURS_OPT.find((s) => s.value === l.secteur) ?? SECTEURS_OPT[0] });
-    setModal(true);
-  };
+  const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
+  const fillForm = (l: Lot) => ({ num: l.num, cde: l.cde, couverture: l.couverture, region: l.region, departement: l.departement, sprefecture: l.sprefecture, secteur: SECTEURS_OPT.find((s) => s.value === l.secteur) ?? SECTEURS_OPT[0] });
+  const openEdit = (l: Lot) => { setViewing(false); setEditing(l); setForm(fillForm(l)); setModal(true); };
+  const openView = (l: Lot) => { setViewing(true);  setEditing(null); setForm(fillForm(l)); setModal(true); };
   const handleDelete = (id: number) => {
     if (!window.confirm('Supprimer ce lot ?')) return;
     const target = data.find((l) => l.id === id);
@@ -154,6 +153,7 @@ const LotList = () => {
                     <td className='text-muted'>{l.secteur}</td>
                     <td className='text-muted'>{l.departement}</td>
                     <td className='text-end'>
+                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openView(l)}><Eye size={14} /></Button>
                       <Button color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(l)}><Edit2 size={14} /></Button>
                       <Button color='light' size='sm' className='p-1' onClick={() => handleDelete(l.id)}><Trash2 size={14} className='text-danger' /></Button>
                     </td>
@@ -172,28 +172,29 @@ const LotList = () => {
       <AppDrawer
         isOpen={modal}
         toggle={() => setModal(false)}
-        title={editing ? 'Modifier le lot' : 'Ajouter un lot'}
-        onSave={handleSave}
+        title={viewing ? 'Détails du lot' : editing ? 'Modifier le lot' : 'Ajouter un lot'}
+        onSave={viewing ? undefined : handleSave}
         onCancel={() => setModal(false)}
+        cancelLabel={viewing ? 'Fermer' : 'Annuler'}
       >
         <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
           <p className='text-muted fw-semibold small mb-2'>Identification</p>
           <Row>
-            <Col md='4'><FormGroup><Label>N° Lot <span className='text-danger'>*</span></Label><Input value={form.num} onChange={(e) => setForm((f) => ({ ...f, num: e.target.value }))} placeholder='Ex: 1' /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Code <span className='text-danger'>*</span></Label>  <Input value={form.cde} onChange={(e) => setForm((f) => ({ ...f, cde: e.target.value }))} placeholder='LT-01' /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Secteur</Label><Combobox options={SECTEURS_OPT} value={form.secteur} onChange={(opt) => opt && setForm((f) => ({ ...f, secteur: opt }))} /></FormGroup></Col>
+            <Col md='4'><FormGroup><Label>N° Lot <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.num} onChange={(e) => setForm((f) => ({ ...f, num: e.target.value }))} placeholder='Ex: 1' /></FormGroup></Col>
+            <Col md='4'><FormGroup><Label>Code <span className='text-danger'>*</span></Label>  <Input disabled={viewing} value={form.cde} onChange={(e) => setForm((f) => ({ ...f, cde: e.target.value }))} placeholder='LT-01' /></FormGroup></Col>
+            <Col md='4'><FormGroup><Label>Secteur</Label><Combobox isDisabled={viewing} options={SECTEURS_OPT} value={form.secteur} onChange={(opt) => opt && setForm((f) => ({ ...f, secteur: opt }))} /></FormGroup></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Zone</p>
-          <FormGroup><Label>Zone de couverture</Label><Input value={form.couverture} onChange={(e) => setForm((f) => ({ ...f, couverture: e.target.value }))} placeholder='Ex: Zone Nord Abengourou' /></FormGroup>
+          <FormGroup><Label>Zone de couverture</Label><Input disabled={viewing} value={form.couverture} onChange={(e) => setForm((f) => ({ ...f, couverture: e.target.value }))} placeholder='Ex: Zone Nord Abengourou' /></FormGroup>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Localisation</p>
           <Row>
-            <Col md='4'><FormGroup><Label>Région</Label>         <Input value={form.region}      onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}      /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Département</Label>    <Input value={form.departement} onChange={(e) => setForm((f) => ({ ...f, departement: e.target.value }))} /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Sous-préfecture</Label><Input value={form.sprefecture} onChange={(e) => setForm((f) => ({ ...f, sprefecture: e.target.value }))} /></FormGroup></Col>
+            <Col md='4'><FormGroup><Label>Région</Label>         <Input disabled={viewing} value={form.region}      onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}      /></FormGroup></Col>
+            <Col md='4'><FormGroup><Label>Département</Label>    <Input disabled={viewing} value={form.departement} onChange={(e) => setForm((f) => ({ ...f, departement: e.target.value }))} /></FormGroup></Col>
+            <Col md='4'><FormGroup><Label>Sous-préfecture</Label><Input disabled={viewing} value={form.sprefecture} onChange={(e) => setForm((f) => ({ ...f, sprefecture: e.target.value }))} /></FormGroup></Col>
           </Row>
         </Form>
       </AppDrawer>
