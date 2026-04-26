@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
-import { PlusCircle, Edit2, Trash2 } from 'react-feather';
+import { PlusCircle, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -45,6 +45,7 @@ const ContratList = () => {
   const [data,    setData   ] = useState<Contrat[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<Contrat | null>(null);
+  const [viewing, setViewing] = useState(false);
   const [form,    setForm   ] = useState(emptyForm);
 
   const [fNum,    setFNum   ] = useState(() => searchParams.get('ct_num')   ?? '');
@@ -69,12 +70,10 @@ const ContratList = () => {
   const handleStatut = (v: string) => { setFStatut(v); setPage(1); pushUrl({ ct_sta: v || null, ct_page: null }); };
   const handlePage   = (p: number) => { setPage(p); pushUrl({ ct_page: p > 1 ? String(p) : null }); };
 
-  const openAdd  = () => { setEditing(null); setForm(emptyForm()); setModal(true); };
-  const openEdit = (c: Contrat) => {
-    setEditing(c);
-    setForm({ num: c.num, debut: c.debut, fin: c.fin, signature: c.signature, montant: c.montant, statut: c.statut, operateur: OPERATEURS_OPT.find((o) => o.value === c.operateur) ?? OPERATEURS_OPT[0] });
-    setModal(true);
-  };
+  const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
+  const fillForm = (c: Contrat) => ({ num: c.num, debut: c.debut, fin: c.fin, signature: c.signature, montant: c.montant, statut: c.statut, operateur: OPERATEURS_OPT.find((o) => o.value === c.operateur) ?? OPERATEURS_OPT[0] });
+  const openEdit = (c: Contrat) => { setViewing(false); setEditing(c); setForm(fillForm(c)); setModal(true); };
+  const openView = (c: Contrat) => { setViewing(true);  setEditing(null); setForm(fillForm(c)); setModal(true); };
   const handleDelete = (id: number) => {
     if (!window.confirm('Supprimer ce contrat ?')) return;
     const target = data.find((c) => c.id === id);
@@ -151,6 +150,7 @@ const ContratList = () => {
                     <td>{fmtMontant(c.montant)}</td>
                     <td><Badge color={c.statut ? 'success' : 'secondary'} className='badge-light'>{c.statut ? 'Actif' : 'Clôturé'}</Badge></td>
                     <td className='text-end'>
+                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openView(c)}><Eye size={14} /></Button>
                       <Button color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(c)}><Edit2 size={14} /></Button>
                       <Button color='light' size='sm' className='p-1' onClick={() => handleDelete(c.id)}><Trash2 size={14} className='text-danger' /></Button>
                     </td>
@@ -169,33 +169,34 @@ const ContratList = () => {
       <AppDrawer
         isOpen={modal}
         toggle={() => setModal(false)}
-        title={editing ? 'Modifier le contrat' : 'Ajouter un contrat'}
-        onSave={handleSave}
+        title={viewing ? 'Détails du contrat' : editing ? 'Modifier le contrat' : 'Ajouter un contrat'}
+        onSave={viewing ? undefined : handleSave}
         onCancel={() => setModal(false)}
+        cancelLabel={viewing ? 'Fermer' : 'Annuler'}
       >
         <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
           <p className='text-muted fw-semibold small mb-2'>Identification</p>
           <Row>
-            <Col md='6'><FormGroup><Label>Numéro contrat <span className='text-danger'>*</span></Label><Input value={form.num} onChange={(e) => setForm((f) => ({ ...f, num: e.target.value }))} placeholder='CTR-2024-001' /></FormGroup></Col>
-            <Col md='6'><FormGroup><Label>Opérateur</Label><Combobox options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></FormGroup></Col>
+            <Col md='6'><FormGroup><Label>Numéro contrat <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.num} onChange={(e) => setForm((f) => ({ ...f, num: e.target.value }))} placeholder='CTR-2024-001' /></FormGroup></Col>
+            <Col md='6'><FormGroup><Label>Opérateur</Label><Combobox isDisabled={viewing} options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></FormGroup></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Période</p>
           <Row>
-            <Col md='4'><DateInput label='Début'     required value={form.debut}     onChange={(v) => setForm((f) => ({ ...f, debut: v }))}     /></Col>
-            <Col md='4'><DateInput label='Fin'       required value={form.fin}       onChange={(v) => setForm((f) => ({ ...f, fin: v }))}       /></Col>
-            <Col md='4'><DateInput label='Signature'          value={form.signature} onChange={(v) => setForm((f) => ({ ...f, signature: v }))} /></Col>
+            <Col md='4'><DateInput disabled={viewing} label='Début'     required value={form.debut}     onChange={(v) => setForm((f) => ({ ...f, debut: v }))}     /></Col>
+            <Col md='4'><DateInput disabled={viewing} label='Fin'       required value={form.fin}       onChange={(v) => setForm((f) => ({ ...f, fin: v }))}       /></Col>
+            <Col md='4'><DateInput disabled={viewing} label='Signature'          value={form.signature} onChange={(v) => setForm((f) => ({ ...f, signature: v }))} /></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Financier</p>
-          <FormGroup><Label>Montant (FCFA)</Label><Input type='number' min={0} value={form.montant} onChange={(e) => setForm((f) => ({ ...f, montant: Number(e.target.value) }))} /></FormGroup>
+          <FormGroup><Label>Montant (FCFA)</Label><Input disabled={viewing} type='number' min={0} value={form.montant} onChange={(e) => setForm((f) => ({ ...f, montant: Number(e.target.value) }))} /></FormGroup>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Statut</p>
           <FormGroup check>
-            <Input type='checkbox' checked={form.statut} onChange={(e) => setForm((f) => ({ ...f, statut: e.target.checked }))} />
+            <Input disabled={viewing} type='checkbox' checked={form.statut} onChange={(e) => setForm((f) => ({ ...f, statut: e.target.checked }))} />
             <Label check>Contrat actif</Label>
           </FormGroup>
         </Form>
