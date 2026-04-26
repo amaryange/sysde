@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
+import ConfirmDelete from '@/Component/Common/ConfirmDelete';
 import { UserPlus, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
@@ -62,8 +63,9 @@ const UtilisateurNonEncadreurList = () => {
   const [data,    setData   ] = useState<Utilisateur[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<Utilisateur | null>(null);
-  const [viewing, setViewing] = useState(false);
-  const [form,    setForm   ] = useState<ReturnType<typeof emptyForm>>(emptyForm);
+  const [viewing,      setViewing     ] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Utilisateur | null>(null);
+  const [form,         setForm        ] = useState<ReturnType<typeof emptyForm>>(emptyForm);
 
   const [fNom,      setFNom     ] = useState(() => searchParams.get('ut_nom')   ?? '');
   const [fMat,      setFMat     ] = useState(() => searchParams.get('ut_mat')   ?? '');
@@ -99,11 +101,11 @@ const UtilisateurNonEncadreurList = () => {
   const fillForm = (u: Utilisateur) => ({ nom: u.nom, prenoms: u.prenoms, nat: u.nat, mat: u.mat, mdp: '', email: u.email, tel: u.tel, actif: u.actif, genre: GENRES_OPT.find((g) => g.value === u.genre) ?? GENRES_OPT[0], poste: POSTES_OPT.find((p) => p.value === u.poste) ?? POSTES_OPT[0], operateur: OPERATEURS_OPT.find((o) => o.value === u.operateur) ?? OPERATEURS_OPT[0] });
   const openEdit = (u: Utilisateur) => { setViewing(false); setEditing(u); setForm(fillForm(u)); setModal(true); };
   const openView = (u: Utilisateur) => { setViewing(true);  setEditing(null); setForm(fillForm(u)); setModal(true); };
-  const handleDelete = (id: number) => {
-    if (!window.confirm('Supprimer cet utilisateur ?')) return;
-    const target = data.find((u) => u.id === id);
-    setData((p) => p.filter((u) => u.id !== id));
-    log('DELETE', 'Utilisateur', `Suppression de ${target?.nom ?? ''} ${target?.prenoms ?? ''} (${target?.mat ?? id})`, target?.mat);
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    setData((p) => p.filter((u) => u.id !== deleteTarget.id));
+    log('DELETE', 'Utilisateur', `Suppression de ${deleteTarget.nom} ${deleteTarget.prenoms} (${deleteTarget.mat})`, deleteTarget.mat);
+    setDeleteTarget(null);
   };
   const handleSave = () => {
     if (!form.nom.trim() || !form.mat.trim()) return;
@@ -201,7 +203,7 @@ const UtilisateurNonEncadreurList = () => {
                       <UncontrolledTooltip target={`ut-view-${u.id}`}>Consulter</UncontrolledTooltip>
                       <Button id={`ut-edit-${u.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(u)}><Edit2 size={14} /></Button>
                       <UncontrolledTooltip target={`ut-edit-${u.id}`}>Modifier</UncontrolledTooltip>
-                      <Button id={`ut-del-${u.id}`} color='light' size='sm' className='p-1' onClick={() => handleDelete(u.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <Button id={`ut-del-${u.id}`} color='light' size='sm' className='p-1' onClick={() => setDeleteTarget(u)}><Trash2 size={14} className='text-danger' /></Button>
                       <UncontrolledTooltip target={`ut-del-${u.id}`}>Supprimer</UncontrolledTooltip>
                     </td>
                   </tr>
@@ -339,6 +341,13 @@ const UtilisateurNonEncadreurList = () => {
 
           </Form>
       </AppDrawer>
+
+      <ConfirmDelete
+        isOpen={!!deleteTarget}
+        message={`Voulez-vous vraiment supprimer l'utilisateur "${deleteTarget?.nom} ${deleteTarget?.prenoms}" ? Cette action est irréversible.`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };
