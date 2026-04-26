@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
 import { PlusCircle, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -150,9 +150,12 @@ const ContratList = () => {
                     <td>{fmtMontant(c.montant)}</td>
                     <td><Badge color={c.statut ? 'success' : 'secondary'} className='badge-light'>{c.statut ? 'Actif' : 'Clôturé'}</Badge></td>
                     <td className='text-end'>
-                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openView(c)}><Eye size={14} /></Button>
-                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(c)}><Edit2 size={14} /></Button>
-                      <Button color='light' size='sm' className='p-1' onClick={() => handleDelete(c.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <Button id={`ct-view-${c.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openView(c)}><Eye size={14} /></Button>
+                      <UncontrolledTooltip target={`ct-view-${c.id}`}>Consulter</UncontrolledTooltip>
+                      <Button id={`ct-edit-${c.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(c)}><Edit2 size={14} /></Button>
+                      <UncontrolledTooltip target={`ct-edit-${c.id}`}>Modifier</UncontrolledTooltip>
+                      <Button id={`ct-del-${c.id}`} color='light' size='sm' className='p-1' onClick={() => handleDelete(c.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <UncontrolledTooltip target={`ct-del-${c.id}`}>Supprimer</UncontrolledTooltip>
                     </td>
                   </tr>
                 ))}
