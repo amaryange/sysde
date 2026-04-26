@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
+import ConfirmDelete from '@/Component/Common/ConfirmDelete';
 import { UserPlus, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
@@ -43,8 +44,9 @@ const OperateurList = () => {
   const [data,    setData   ] = useState<Operateur[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<Operateur | null>(null);
-  const [viewing, setViewing] = useState(false);
-  const [form,    setForm   ] = useState(emptyForm);
+  const [viewing,      setViewing     ] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Operateur | null>(null);
+  const [form,         setForm        ] = useState(emptyForm);
 
   const [fRs,    setFRs   ] = useState(() => searchParams.get('op_rs')    ?? '');
   const [fAcr,   setFAcr  ] = useState(() => searchParams.get('op_acr')   ?? '');
@@ -74,11 +76,11 @@ const OperateurList = () => {
   const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
   const openEdit = (o: Operateur) => { setViewing(false); setEditing(o); setForm({ rs: o.rs, acronyme: o.acronyme, adresse: o.adresse, email: o.email, tel: o.tel, encadreur: o.encadreur }); setModal(true); };
   const openView = (o: Operateur) => { setViewing(true);  setEditing(null); setForm({ rs: o.rs, acronyme: o.acronyme, adresse: o.adresse, email: o.email, tel: o.tel, encadreur: o.encadreur }); setModal(true); };
-  const handleDelete = (id: number) => {
-    if (!window.confirm('Supprimer cet opérateur ?')) return;
-    const target = data.find((o) => o.id === id);
-    setData((p) => p.filter((o) => o.id !== id));
-    log('DELETE', 'Operateur', `Suppression de l'opérateur ${target?.acronyme ?? id}`, target?.acronyme);
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    setData((p) => p.filter((o) => o.id !== deleteTarget.id));
+    log('DELETE', 'Operateur', `Suppression de l'opérateur ${deleteTarget.acronyme}`, deleteTarget.acronyme);
+    setDeleteTarget(null);
   };
   const handleSave = () => {
     if (!form.rs.trim() || !form.acronyme.trim()) return;
@@ -150,7 +152,7 @@ const OperateurList = () => {
                       <UncontrolledTooltip target={`op-view-${o.id}`}>Consulter</UncontrolledTooltip>
                       <Button id={`op-edit-${o.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(o)}><Edit2 size={14} /></Button>
                       <UncontrolledTooltip target={`op-edit-${o.id}`}>Modifier</UncontrolledTooltip>
-                      <Button id={`op-del-${o.id}`} color='light' size='sm' className='p-1' onClick={() => handleDelete(o.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <Button id={`op-del-${o.id}`} color='light' size='sm' className='p-1' onClick={() => setDeleteTarget(o)}><Trash2 size={14} className='text-danger' /></Button>
                       <UncontrolledTooltip target={`op-del-${o.id}`}>Supprimer</UncontrolledTooltip>
                     </td>
                   </tr>
@@ -194,6 +196,13 @@ const OperateurList = () => {
           </FormGroup>
         </Form>
       </AppDrawer>
+
+      <ConfirmDelete
+        isOpen={!!deleteTarget}
+        message={`Voulez-vous vraiment supprimer l'opérateur "${deleteTarget?.acronyme}" ? Cette action est irréversible.`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };
