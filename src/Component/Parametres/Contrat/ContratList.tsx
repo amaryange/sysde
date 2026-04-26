@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
+import ConfirmDelete from '@/Component/Common/ConfirmDelete';
 import { PlusCircle, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
@@ -45,8 +46,9 @@ const ContratList = () => {
   const [data,    setData   ] = useState<Contrat[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<Contrat | null>(null);
-  const [viewing, setViewing] = useState(false);
-  const [form,    setForm   ] = useState(emptyForm);
+  const [viewing,      setViewing     ] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Contrat | null>(null);
+  const [form,         setForm        ] = useState(emptyForm);
 
   const [fNum,    setFNum   ] = useState(() => searchParams.get('ct_num')   ?? '');
   const [fOp,     setFOp    ] = useState(() => searchParams.get('ct_op')    ?? '');
@@ -74,11 +76,11 @@ const ContratList = () => {
   const fillForm = (c: Contrat) => ({ num: c.num, debut: c.debut, fin: c.fin, signature: c.signature, montant: c.montant, statut: c.statut, operateur: OPERATEURS_OPT.find((o) => o.value === c.operateur) ?? OPERATEURS_OPT[0] });
   const openEdit = (c: Contrat) => { setViewing(false); setEditing(c); setForm(fillForm(c)); setModal(true); };
   const openView = (c: Contrat) => { setViewing(true);  setEditing(null); setForm(fillForm(c)); setModal(true); };
-  const handleDelete = (id: number) => {
-    if (!window.confirm('Supprimer ce contrat ?')) return;
-    const target = data.find((c) => c.id === id);
-    setData((p) => p.filter((c) => c.id !== id));
-    log('DELETE', 'Contrat', `Suppression du contrat ${target?.num ?? id}`, target?.num);
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    setData((p) => p.filter((c) => c.id !== deleteTarget.id));
+    log('DELETE', 'Contrat', `Suppression du contrat ${deleteTarget.num}`, deleteTarget.num);
+    setDeleteTarget(null);
   };
   const handleSave = () => {
     if (!form.num.trim() || !form.debut || !form.fin) return;
@@ -154,7 +156,7 @@ const ContratList = () => {
                       <UncontrolledTooltip target={`ct-view-${c.id}`}>Consulter</UncontrolledTooltip>
                       <Button id={`ct-edit-${c.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(c)}><Edit2 size={14} /></Button>
                       <UncontrolledTooltip target={`ct-edit-${c.id}`}>Modifier</UncontrolledTooltip>
-                      <Button id={`ct-del-${c.id}`} color='light' size='sm' className='p-1' onClick={() => handleDelete(c.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <Button id={`ct-del-${c.id}`} color='light' size='sm' className='p-1' onClick={() => setDeleteTarget(c)}><Trash2 size={14} className='text-danger' /></Button>
                       <UncontrolledTooltip target={`ct-del-${c.id}`}>Supprimer</UncontrolledTooltip>
                     </td>
                   </tr>
@@ -204,6 +206,13 @@ const ContratList = () => {
           </FormGroup>
         </Form>
       </AppDrawer>
+
+      <ConfirmDelete
+        isOpen={!!deleteTarget}
+        message={`Voulez-vous vraiment supprimer le contrat "${deleteTarget?.num}" ? Cette action est irréversible.`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };
