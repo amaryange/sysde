@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
-import { PlusCircle, Edit2, Trash2 } from 'react-feather';
+import { PlusCircle, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -55,6 +55,7 @@ const PosteList = () => {
   const [data,    setData   ] = useState<Poste[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<Poste | null>(null);
+  const [viewing, setViewing] = useState(false);
   const [form,    setForm   ] = useState(emptyForm);
 
   const [fCde,    setFCde   ] = useState(() => searchParams.get('po_cde')  ?? '');
@@ -83,12 +84,10 @@ const PosteList = () => {
   const handleStatut = (v: string) => { setFStatut(v); setPage(1); pushUrl({ po_sta:  v || null, po_page: null }); };
   const handlePage   = (p: number) => { setPage(p); pushUrl({ po_page: p > 1 ? String(p) : null }); };
 
-  const openAdd  = () => { setEditing(null); setForm(emptyForm()); setModal(true); };
-  const openEdit = (p: Poste) => {
-    setEditing(p);
-    setForm({ lib: p.lib, cde: p.cde, secteur: p.secteur, lot: p.lot, section: p.section, region: p.region, departement: p.departement, sprefecture: p.sprefecture, actif: p.actif, role: ROLES_OPT.find((r) => r.value === p.role) ?? ROLES_OPT[0], operateur: OPERATEURS_OPT.find((o) => o.value === p.operateur) ?? OPERATEURS_OPT[0] });
-    setModal(true);
-  };
+  const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
+  const fillForm = (p: Poste) => ({ lib: p.lib, cde: p.cde, secteur: p.secteur, lot: p.lot, section: p.section, region: p.region, departement: p.departement, sprefecture: p.sprefecture, actif: p.actif, role: ROLES_OPT.find((r) => r.value === p.role) ?? ROLES_OPT[0], operateur: OPERATEURS_OPT.find((o) => o.value === p.operateur) ?? OPERATEURS_OPT[0] });
+  const openEdit = (p: Poste) => { setViewing(false); setEditing(p); setForm(fillForm(p)); setModal(true); };
+  const openView = (p: Poste) => { setViewing(true);  setEditing(null); setForm(fillForm(p)); setModal(true); };
   const handleDelete = (id: number) => {
     if (!window.confirm('Supprimer ce poste ?')) return;
     const target = data.find((p) => p.id === id);
@@ -166,6 +165,7 @@ const PosteList = () => {
                     <td className='text-muted'>{p.secteur}</td>
                     <td><Badge color={p.actif ? 'success' : 'secondary'} className='badge-light'>{p.actif ? 'Actif' : 'Inactif'}</Badge></td>
                     <td className='text-end'>
+                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openView(p)}><Eye size={14} /></Button>
                       <Button color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(p)}><Edit2 size={14} /></Button>
                       <Button color='light' size='sm' className='p-1' onClick={() => handleDelete(p.id)}><Trash2 size={14} className='text-danger' /></Button>
                     </td>
@@ -184,41 +184,42 @@ const PosteList = () => {
       <AppDrawer
         isOpen={modal}
         toggle={() => setModal(false)}
-        title={editing ? 'Modifier le poste' : 'Ajouter un poste'}
-        onSave={handleSave}
+        title={viewing ? 'Détails du poste' : editing ? 'Modifier le poste' : 'Ajouter un poste'}
+        onSave={viewing ? undefined : handleSave}
         onCancel={() => setModal(false)}
+        cancelLabel={viewing ? 'Fermer' : 'Annuler'}
       >
         <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
           <p className='text-muted fw-semibold small mb-2'>Identification</p>
           <Row>
-            <Col md='8'><FormGroup><Label>Libellé</Label><Input value={form.lib} onChange={(e) => setForm((f) => ({ ...f, lib: e.target.value }))} placeholder='Ex: Chef Secteur Abengourou' /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Code <span className='text-danger'>*</span></Label><Input value={form.cde} onChange={(e) => setForm((f) => ({ ...f, cde: e.target.value }))} placeholder='CS-ABG-001' /></FormGroup></Col>
+            <Col md='8'><FormGroup><Label>Libellé</Label><Input disabled={viewing} value={form.lib} onChange={(e) => setForm((f) => ({ ...f, lib: e.target.value }))} placeholder='Ex: Chef Secteur Abengourou' /></FormGroup></Col>
+            <Col md='4'><FormGroup><Label>Code <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.cde} onChange={(e) => setForm((f) => ({ ...f, cde: e.target.value }))} placeholder='CS-ABG-001' /></FormGroup></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Affectation</p>
           <Row>
-            <Col md='6'><Combobox label='Rôle'      options={ROLES_OPT}     value={form.role}      onChange={(opt) => opt && setForm((f) => ({ ...f, role: opt }))}      /></Col>
-            <Col md='6'><Combobox label='Opérateur' options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></Col>
+            <Col md='6'><Combobox label='Rôle'      isDisabled={viewing} options={ROLES_OPT}     value={form.role}      onChange={(opt) => opt && setForm((f) => ({ ...f, role: opt }))}      /></Col>
+            <Col md='6'><Combobox label='Opérateur' isDisabled={viewing} options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Localisation</p>
           <Row>
-            <Col md='4'><FormGroup><Label>Secteur</Label>   <Input value={form.secteur} onChange={(e) => setForm((f) => ({ ...f, secteur: e.target.value }))}   /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Lot(s)</Label>    <Input value={form.lot}     onChange={(e) => setForm((f) => ({ ...f, lot: e.target.value }))}        placeholder='Ex: 1, 2, 3' /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Section(s)</Label><Input value={form.section} onChange={(e) => setForm((f) => ({ ...f, section: e.target.value }))}    placeholder='Ex: A, B'    /></FormGroup></Col>
+            <Col md='4'><FormGroup><Label>Secteur</Label>   <Input disabled={viewing} value={form.secteur} onChange={(e) => setForm((f) => ({ ...f, secteur: e.target.value }))}   /></FormGroup></Col>
+            <Col md='4'><FormGroup><Label>Lot(s)</Label>    <Input disabled={viewing} value={form.lot}     onChange={(e) => setForm((f) => ({ ...f, lot: e.target.value }))}        placeholder='Ex: 1, 2, 3' /></FormGroup></Col>
+            <Col md='4'><FormGroup><Label>Section(s)</Label><Input disabled={viewing} value={form.section} onChange={(e) => setForm((f) => ({ ...f, section: e.target.value }))}    placeholder='Ex: A, B'    /></FormGroup></Col>
           </Row>
           <Row>
-            <Col md='4'><FormGroup><Label>Région</Label>         <Input value={form.region}      onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}      /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Département</Label>    <Input value={form.departement} onChange={(e) => setForm((f) => ({ ...f, departement: e.target.value }))} /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Sous-préfecture</Label><Input value={form.sprefecture} onChange={(e) => setForm((f) => ({ ...f, sprefecture: e.target.value }))} /></FormGroup></Col>
+            <Col md='4'><FormGroup><Label>Région</Label>         <Input disabled={viewing} value={form.region}      onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}      /></FormGroup></Col>
+            <Col md='4'><FormGroup><Label>Département</Label>    <Input disabled={viewing} value={form.departement} onChange={(e) => setForm((f) => ({ ...f, departement: e.target.value }))} /></FormGroup></Col>
+            <Col md='4'><FormGroup><Label>Sous-préfecture</Label><Input disabled={viewing} value={form.sprefecture} onChange={(e) => setForm((f) => ({ ...f, sprefecture: e.target.value }))} /></FormGroup></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Statut</p>
           <FormGroup check>
-            <Input type='checkbox' checked={form.actif} onChange={(e) => setForm((f) => ({ ...f, actif: e.target.checked }))} />
+            <Input disabled={viewing} type='checkbox' checked={form.actif} onChange={(e) => setForm((f) => ({ ...f, actif: e.target.checked }))} />
             <Label check>Poste actif</Label>
           </FormGroup>
         </Form>
