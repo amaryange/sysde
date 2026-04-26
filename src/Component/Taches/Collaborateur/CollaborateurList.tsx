@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
-import { UserPlus, Edit2, Trash2 } from 'react-feather';
+import { UserPlus, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -53,6 +53,7 @@ const ChefDepartementList = () => {
   const [data,    setData   ] = useState<ChefDepartement[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<ChefDepartement | null>(null);
+  const [viewing, setViewing] = useState(false);
   const [form,    setForm   ] = useState<ReturnType<typeof emptyForm>>(emptyForm);
 
   const [fNom,    setFNom   ] = useState(() => searchParams.get('cd_nom')   ?? '');
@@ -85,12 +86,10 @@ const ChefDepartementList = () => {
   const handleStatut = (v: string) => { setFStatut(v); setPage(1); pushUrl({ cd_sta: v || null, cd_page: null }); };
   const handlePage   = (p: number) => { setPage(p); pushUrl({ cd_page: p > 1 ? String(p) : null }); };
 
-  const openAdd  = () => { setEditing(null); setForm(emptyForm()); setModal(true); };
-  const openEdit = (u: ChefDepartement) => {
-    setEditing(u);
-    setForm({ nom: u.nom, prenoms: u.prenoms, nat: u.nat, mat: u.mat, mdp: '', email: u.email, tel: u.tel, actif: u.actif, genre: GENRES_OPT.find((g) => g.value === u.genre) ?? GENRES_OPT[0], poste: POSTES_OPT.find((p) => p.value === u.poste) ?? POSTES_OPT[0], operateur: OPERATEURS_OPT.find((o) => o.value === u.operateur) ?? OPERATEURS_OPT[0] });
-    setModal(true);
-  };
+  const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
+  const fillForm = (u: ChefDepartement) => ({ nom: u.nom, prenoms: u.prenoms, nat: u.nat, mat: u.mat, mdp: '', email: u.email, tel: u.tel, actif: u.actif, genre: GENRES_OPT.find((g) => g.value === u.genre) ?? GENRES_OPT[0], poste: POSTES_OPT.find((p) => p.value === u.poste) ?? POSTES_OPT[0], operateur: OPERATEURS_OPT.find((o) => o.value === u.operateur) ?? OPERATEURS_OPT[0] });
+  const openEdit = (u: ChefDepartement) => { setViewing(false); setEditing(u); setForm(fillForm(u)); setModal(true); };
+  const openView = (u: ChefDepartement) => { setViewing(true);  setEditing(null); setForm(fillForm(u)); setModal(true); };
   const handleDelete = (id: number) => {
     if (!window.confirm('Supprimer ce chef de département ?')) return;
     const target = data.find((u) => u.id === id);
@@ -189,8 +188,12 @@ const ChefDepartementList = () => {
                     <td className='text-muted'>{u.tel}</td>
                     <td><Badge color={u.actif ? 'success' : 'secondary'} className='badge-light'>{u.actif ? 'Actif' : 'Inactif'}</Badge></td>
                     <td className='text-end'>
-                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(u)}><Edit2 size={14} /></Button>
-                      <Button color='light' size='sm' className='p-1' onClick={() => handleDelete(u.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <Button id={`cd-view-${u.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openView(u)}><Eye size={14} /></Button>
+                      <UncontrolledTooltip target={`cd-view-${u.id}`}>Consulter</UncontrolledTooltip>
+                      <Button id={`cd-edit-${u.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(u)}><Edit2 size={14} /></Button>
+                      <UncontrolledTooltip target={`cd-edit-${u.id}`}>Modifier</UncontrolledTooltip>
+                      <Button id={`cd-del-${u.id}`} color='light' size='sm' className='p-1' onClick={() => handleDelete(u.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <UncontrolledTooltip target={`cd-del-${u.id}`}>Supprimer</UncontrolledTooltip>
                     </td>
                   </tr>
                 ))}
@@ -207,9 +210,10 @@ const ChefDepartementList = () => {
       <AppDrawer
         isOpen={modal}
         toggle={() => setModal(false)}
-        title={editing ? 'Modifier le chef de département' : 'Ajouter un chef de département'}
-        onSave={handleSave}
+        title={viewing ? 'Détails du chef de département' : editing ? 'Modifier le chef de département' : 'Ajouter un chef de département'}
+        onSave={viewing ? undefined : handleSave}
         onCancel={() => setModal(false)}
+        cancelLabel={viewing ? 'Fermer' : 'Annuler'}
       >
           <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
 
@@ -219,31 +223,31 @@ const ChefDepartementList = () => {
               <Col xs='6'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Nom <span className='text-danger'>*</span></Label>
-                  <Input value={form.nom} onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))} placeholder='KONAN' />
+                  <Input disabled={viewing} value={form.nom} onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))} placeholder='KONAN' />
                 </FormGroup>
               </Col>
               <Col xs='6'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Prénoms</Label>
-                  <Input value={form.prenoms} onChange={(e) => setForm((f) => ({ ...f, prenoms: e.target.value }))} placeholder='Brou Édouard' />
+                  <Input disabled={viewing} value={form.prenoms} onChange={(e) => setForm((f) => ({ ...f, prenoms: e.target.value }))} placeholder='Brou Édouard' />
                 </FormGroup>
               </Col>
               <Col xs='4'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Genre</Label>
-                  <Combobox options={GENRES_OPT} value={form.genre} onChange={(opt) => opt && setForm((f) => ({ ...f, genre: opt }))} />
+                  <Combobox isDisabled={viewing} options={GENRES_OPT} value={form.genre} onChange={(opt) => opt && setForm((f) => ({ ...f, genre: opt }))} />
                 </FormGroup>
               </Col>
               <Col xs='4'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Nationalité</Label>
-                  <Input value={form.nat} onChange={(e) => setForm((f) => ({ ...f, nat: e.target.value }))} />
+                  <Input disabled={viewing} value={form.nat} onChange={(e) => setForm((f) => ({ ...f, nat: e.target.value }))} />
                 </FormGroup>
               </Col>
               <Col xs='4'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Matricule <span className='text-danger'>*</span></Label>
-                  <Input value={form.mat} onChange={(e) => setForm((f) => ({ ...f, mat: e.target.value }))} placeholder='CD001' />
+                  <Input disabled={viewing} value={form.mat} onChange={(e) => setForm((f) => ({ ...f, mat: e.target.value }))} placeholder='CD001' />
                 </FormGroup>
               </Col>
             </Row>
@@ -254,10 +258,10 @@ const ChefDepartementList = () => {
             <p className='text-uppercase text-muted fw-semibold mb-2' style={{ fontSize: 11, letterSpacing: '0.08em' }}>Affectation</p>
             <Row className='g-3'>
               <Col xs='12'>
-                <Combobox label='Opérateur (encadreur)' options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} />
+                <Combobox isDisabled={viewing} label='Opérateur (encadreur)' options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} />
               </Col>
               <Col xs='12'>
-                <Combobox label='Poste' options={POSTES_OPT} value={form.poste} onChange={(opt) => opt && setForm((f) => ({ ...f, poste: opt }))} />
+                <Combobox isDisabled={viewing} label='Poste' options={POSTES_OPT} value={form.poste} onChange={(opt) => opt && setForm((f) => ({ ...f, poste: opt }))} />
               </Col>
             </Row>
 
@@ -269,18 +273,18 @@ const ChefDepartementList = () => {
               <Col xs='7'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Email</Label>
-                  <Input type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='user@operateur.ci' />
+                  <Input disabled={viewing} type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='user@operateur.ci' />
                 </FormGroup>
               </Col>
               <Col xs='5'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Téléphone</Label>
-                  <Input value={form.tel} onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))} placeholder='+225 XX XX XX XX' />
+                  <Input disabled={viewing} value={form.tel} onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))} placeholder='+225 XX XX XX XX' />
                 </FormGroup>
               </Col>
             </Row>
 
-            {!editing && (
+            {!editing && !viewing && (
               <>
                 <hr className='my-3' style={{ borderColor: 'transparent' }} />
 
@@ -296,7 +300,7 @@ const ChefDepartementList = () => {
             <hr className='my-3' style={{ borderColor: 'transparent' }} />
 
             <FormGroup check className='mb-0'>
-              <Input type='checkbox' id='cd-actif-check' checked={form.actif} onChange={(e) => setForm((f) => ({ ...f, actif: e.target.checked }))} />
+              <Input disabled={viewing} type='checkbox' id='cd-actif-check' checked={form.actif} onChange={(e) => setForm((f) => ({ ...f, actif: e.target.checked }))} />
               <Label check htmlFor='cd-actif-check' className='fw-semibold'>Compte actif</Label>
             </FormGroup>
 
