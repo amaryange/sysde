@@ -167,13 +167,20 @@ const OperateurList = () => {
         onCancel={() => setModal(false)}
       >
         <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-          <FormGroup><Label>Raison sociale <span className='text-danger'>*</span></Label><Input value={form.rs}       onChange={(e) => setForm((f) => ({ ...f, rs: e.target.value }))}       placeholder='Ex: SAPH'  /></FormGroup>
-          <FormGroup><Label>Acronyme <span className='text-danger'>*</span></Label>      <Input value={form.acronyme} onChange={(e) => setForm((f) => ({ ...f, acronyme: e.target.value }))} placeholder='Ex: SPH'   /></FormGroup>
-          <FormGroup><Label>Adresse</Label>                                               <Input value={form.adresse}  onChange={(e) => setForm((f) => ({ ...f, adresse: e.target.value }))}  /></FormGroup>
+          <p className='text-muted fw-semibold small mb-2'>Identification</p>
+          <FormGroup><Label>Raison sociale <span className='text-danger'>*</span></Label><Input value={form.rs}       onChange={(e) => setForm((f) => ({ ...f, rs: e.target.value }))}       placeholder='Ex: SOCIETE AFRICAINE DE PLANTATION DHEVEA' /></FormGroup>
+          <FormGroup><Label>Acronyme <span className='text-danger'>*</span></Label>      <Input value={form.acronyme} onChange={(e) => setForm((f) => ({ ...f, acronyme: e.target.value }))} placeholder='Ex: SAPH' /></FormGroup>
+
+          <hr style={{ borderColor: 'transparent' }} />
+          <p className='text-muted fw-semibold small mb-2'>Coordonnées</p>
+          <FormGroup><Label>Adresse</Label><Input value={form.adresse} onChange={(e) => setForm((f) => ({ ...f, adresse: e.target.value }))} /></FormGroup>
           <Row>
             <Col md='6'><FormGroup><Label>Email</Label>    <Input type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='contact@exemple.ci' /></FormGroup></Col>
             <Col md='6'><FormGroup><Label>Téléphone</Label><Input             value={form.tel}   onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))}   placeholder='0X XX XX XX'         /></FormGroup></Col>
           </Row>
+
+          <hr style={{ borderColor: 'transparent' }} />
+          <p className='text-muted fw-semibold small mb-2'>Statut</p>
           <FormGroup check>
             <Input type='checkbox' checked={form.encadreur} onChange={(e) => setForm((f) => ({ ...f, encadreur: e.target.checked }))} />
             <Label check>Opérateur d'encadrement</Label>
