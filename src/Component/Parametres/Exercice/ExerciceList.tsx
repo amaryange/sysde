@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Row, Col, Alert } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, Alert } from 'reactstrap';
+import AppDrawer from '@/Component/Common/AppDrawer';
 import { PlusCircle, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
@@ -185,38 +186,47 @@ const ExerciceList = () => {
         </CardBody>
       </Card>
 
-      <Modal isOpen={modal} toggle={() => setModal(false)}>
-        <ModalHeader toggle={() => setModal(false)}>{editing ? "Modifier l'exercice" : 'Ajouter un exercice'}</ModalHeader>
-        <ModalBody>
-          <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-            <FormGroup><Label>Libellé <span className='text-danger'>*</span></Label><Input value={form.lib} onChange={(e) => setForm((f) => ({ ...f, lib: e.target.value }))} placeholder='Ex: Exercice 2024' /></FormGroup>
+      <AppDrawer
+        isOpen={modal}
+        toggle={() => setModal(false)}
+        title={editing ? "Modifier l'exercice" : 'Ajouter un exercice'}
+        onCancel={() => setModal(false)}
+        footer={
+          <div className='d-flex gap-2'>
+            <Button color='primary' onClick={handleSave} disabled={limiteAtteinte}>Enregistrer</Button>
+            <Button color='light' onClick={() => setModal(false)}>Annuler</Button>
+          </div>
+        }
+      >
+        <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+          <p className='text-muted fw-semibold small mb-2'>Contrat</p>
+          <FormGroup><Label>Libellé <span className='text-danger'>*</span></Label><Input value={form.lib} onChange={(e) => setForm((f) => ({ ...f, lib: e.target.value }))} placeholder='Ex: Exercice 2024' /></FormGroup>
+          <FormGroup><Label>Contrat</Label><Combobox options={CONTRATS_OPT} value={form.contrat} onChange={(opt) => opt && setForm((f) => ({ ...f, contrat: opt }))} /></FormGroup>
 
-            <Combobox label='Contrat' options={CONTRATS_OPT} value={form.contrat} onChange={(opt) => opt && setForm((f) => ({ ...f, contrat: opt }))} />
+          {maxExercices > 0 && (
+            <Alert color={limiteAtteinte ? 'danger' : nbExistants === maxExercices - 1 ? 'warning' : 'info'} className='py-2 px-3 mb-3' style={{ fontSize: 13 }}>
+              {limiteAtteinte
+                ? <>Ce contrat a atteint sa limite de <strong>{maxExercices} exercice{maxExercices > 1 ? 's' : ''}</strong> ({maxExercices} an{maxExercices > 1 ? 's' : ''} de durée). Impossible d'en ajouter un autre.</>
+                : <><strong>{nbExistants}</strong> exercice{nbExistants > 1 ? 's' : ''} sur <strong>{maxExercices}</strong> autorisé{maxExercices > 1 ? 's' : ''} pour ce contrat ({maxExercices} an{maxExercices > 1 ? 's' : ''}).</>
+              }
+            </Alert>
+          )}
 
-            {maxExercices > 0 && (
-              <Alert color={limiteAtteinte ? 'danger' : nbExistants === maxExercices - 1 ? 'warning' : 'info'} className='py-2 px-3 mb-3' style={{ fontSize: 13 }}>
-                {limiteAtteinte
-                  ? <>Ce contrat a atteint sa limite de <strong>{maxExercices} exercice{maxExercices > 1 ? 's' : ''}</strong> ({maxExercices} an{maxExercices > 1 ? 's' : ''} de durée). Impossible d'en ajouter un autre.</>
-                  : <><strong>{nbExistants}</strong> exercice{nbExistants > 1 ? 's' : ''} sur <strong>{maxExercices}</strong> autorisé{maxExercices > 1 ? 's' : ''} pour ce contrat ({maxExercices} an{maxExercices > 1 ? 's' : ''}).</>
-                }
-              </Alert>
-            )}
+          <hr style={{ borderColor: 'transparent' }} />
+          <p className='text-muted fw-semibold small mb-2'>Période</p>
+          <Row>
+            <Col md='6'><DateInput label='Date de début'   required value={form.annee}   onChange={(v) => setForm((f) => ({ ...f, annee: v }))}   /></Col>
+            <Col md='6'><DateInput label='Date de clôture'          value={form.cloture} onChange={(v) => setForm((f) => ({ ...f, cloture: v }))} /></Col>
+          </Row>
 
-            <Row>
-              <Col md='6'><DateInput label='Date de début'   required value={form.annee}   onChange={(v) => setForm((f) => ({ ...f, annee: v }))}   /></Col>
-              <Col md='6'><DateInput label='Date de clôture'          value={form.cloture} onChange={(v) => setForm((f) => ({ ...f, cloture: v }))} /></Col>
-            </Row>
-            <FormGroup check>
-              <Input type='checkbox' checked={form.statut} onChange={(e) => setForm((f) => ({ ...f, statut: e.target.checked }))} />
-              <Label check>Exercice en cours</Label>
-            </FormGroup>
-          </Form>
-        </ModalBody>
-        <ModalFooter>
-          <Button color='primary' onClick={handleSave} disabled={limiteAtteinte}>Enregistrer</Button>
-          <Button color='light' onClick={() => setModal(false)}>Annuler</Button>
-        </ModalFooter>
-      </Modal>
+          <hr style={{ borderColor: 'transparent' }} />
+          <p className='text-muted fw-semibold small mb-2'>Statut</p>
+          <FormGroup check>
+            <Input type='checkbox' checked={form.statut} onChange={(e) => setForm((f) => ({ ...f, statut: e.target.checked }))} />
+            <Label check>Exercice en cours</Label>
+          </FormGroup>
+        </Form>
+      </AppDrawer>
     </div>
   );
 };
