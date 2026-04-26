@@ -177,7 +177,7 @@ const ContratList = () => {
           <p className='text-muted fw-semibold small mb-2'>Identification</p>
           <Row>
             <Col md='6'><FormGroup><Label>Numéro contrat <span className='text-danger'>*</span></Label><Input value={form.num} onChange={(e) => setForm((f) => ({ ...f, num: e.target.value }))} placeholder='CTR-2024-001' /></FormGroup></Col>
-            <Col md='6'><Combobox label='Opérateur' options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></Col>
+            <Col md='6'><FormGroup><Label>Opérateur</Label><Combobox options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></FormGroup></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />
