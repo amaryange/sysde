@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
 import { PlusCircle, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -165,9 +165,12 @@ const PosteList = () => {
                     <td className='text-muted'>{p.secteur}</td>
                     <td><Badge color={p.actif ? 'success' : 'secondary'} className='badge-light'>{p.actif ? 'Actif' : 'Inactif'}</Badge></td>
                     <td className='text-end'>
-                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openView(p)}><Eye size={14} /></Button>
-                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(p)}><Edit2 size={14} /></Button>
-                      <Button color='light' size='sm' className='p-1' onClick={() => handleDelete(p.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <Button id={`po-view-${p.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openView(p)}><Eye size={14} /></Button>
+                      <UncontrolledTooltip target={`po-view-${p.id}`}>Consulter</UncontrolledTooltip>
+                      <Button id={`po-edit-${p.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(p)}><Edit2 size={14} /></Button>
+                      <UncontrolledTooltip target={`po-edit-${p.id}`}>Modifier</UncontrolledTooltip>
+                      <Button id={`po-del-${p.id}`} color='light' size='sm' className='p-1' onClick={() => handleDelete(p.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <UncontrolledTooltip target={`po-del-${p.id}`}>Supprimer</UncontrolledTooltip>
                     </td>
                   </tr>
                 ))}
