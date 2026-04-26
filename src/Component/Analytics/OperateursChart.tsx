@@ -54,6 +54,11 @@ const OperateursChart = () => {
                 },
               },
             },
+            responsive: [
+              { breakpoint: 992, options: { chart: { height: 210 } } },
+              { breakpoint: 768, options: { chart: { height: 190 } } },
+              { breakpoint: 480, options: { chart: { height: 170 }, yaxis: { labels: { style: { fontSize: '10px' } } } } },
+            ],
           }}
         />
       </CardBody>

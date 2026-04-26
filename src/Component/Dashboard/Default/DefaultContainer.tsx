@@ -25,18 +25,18 @@ const DefaultContainer = () => {
       ))}
 
       {/* Graphiques */}
-      <Col xl='8' className='box-col-12'>
+      <Col xl='8' lg='12' className='box-col-12'>
         <EffectifsCard />
       </Col>
-      <Col xl='4' className='box-col-12'>
+      <Col xl='4' lg='12' className='box-col-12'>
         <RepartitionCard />
       </Col>
 
       {/* Contrats + Exercice */}
-      <Col xl='8' className='box-col-12'>
+      <Col xl='8' lg='12' className='box-col-12'>
         <ContratsCard />
       </Col>
-      <Col xl='4' className='box-col-12'>
+      <Col xl='4' lg='12' className='box-col-12'>
         <ExerciceCard />
       </Col>
     </Row>

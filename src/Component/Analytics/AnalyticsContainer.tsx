@@ -72,17 +72,17 @@ const AnalyticsContainer = () => (
       <Col xl='5' md='6' xs='12'>
         <RolesChart />
       </Col>
-      <Col xl='4' xs='12'>
+      <Col xl='4' md='12' xs='12'>
         <OperateursChart />
       </Col>
     </Row>
 
     {/* Évolution + Alertes */}
     <Row className='g-3'>
-      <Col xl='8' xs='12'>
+      <Col xl='8' md='12' xs='12'>
         <EvolutionChart />
       </Col>
-      <Col xl='4' xs='12'>
+      <Col xl='4' md='12' xs='12'>
         <AlertesPanel />
       </Col>
     </Row>

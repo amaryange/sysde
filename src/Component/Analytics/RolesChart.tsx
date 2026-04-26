@@ -38,6 +38,11 @@ const RolesChart = () => {
             legend: { position: 'top', fontSize: '12px' },
             grid: { borderColor: border },
             tooltip: { y: { formatter: (v: number) => `${v} encadreurs` } },
+            responsive: [
+              { breakpoint: 992, options: { chart: { height: 210 } } },
+              { breakpoint: 768, options: { chart: { height: 190 } } },
+              { breakpoint: 480, options: { chart: { height: 170 }, legend: { position: 'bottom' } } },
+            ],
           }}
         />
       </CardBody>

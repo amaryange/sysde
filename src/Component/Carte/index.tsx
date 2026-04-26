@@ -27,7 +27,7 @@ const Carte = () => {
       {/* En-tête */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
         <h4 style={{ margin: 0 }}>Carte de déploiement</h4>
-        <div style={{ minWidth: 220 }}>
+        <div style={{ minWidth: 200, flex: '0 0 auto', width: '100%', maxWidth: 280 }}>
           <Combobox<number>
             options={exercices.map((ex) => ({ value: ex.id, label: ex.lib }))}
             value={{ value: exerciceId, label: exercices.find((e) => e.id === exerciceId)?.lib ?? '' }}
@@ -47,8 +47,8 @@ const Carte = () => {
       </div>
 
       {/* Carte */}
-      <Card>
-        <CardBody style={{ padding: 0, height: 'calc(100vh - 230px)', minHeight: 500 }}>
+      <Card style={{ flex: 1, minHeight: 0 }}>
+        <CardBody style={{ padding: 0, height: 'clamp(320px, calc(100vh - 220px), 900px)' }}>
           <CarteMap exerciceId={exerciceId} />
         </CardBody>
       </Card>
@@ -70,7 +70,8 @@ const StatBadge = ({ label, value, color }: { label: string; value: number; colo
       padding: '6px 14px',
       display: 'flex',
       flexDirection: 'column',
-      minWidth: 100,
+      flex: '1 1 90px',
+      minWidth: 80,
       boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
     }}>
       <span style={{ fontSize: 20, fontWeight: 700, color, lineHeight: 1.2 }}>{value}</span>

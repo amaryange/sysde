@@ -162,7 +162,7 @@ const UtilisateurNonEncadreurList = () => {
       <Card>
         <CardBody className='p-0'>
           <div className='table-responsive'>
-            <Table className='table table-hover mb-0' style={{ tableLayout: 'fixed', minWidth: 900 }}>
+            <Table className='table table-hover mb-0' style={{ minWidth: 620 }}>
               <thead className='table-light'>
                 <tr>
                   <th style={{ width: '18%' }}>Nom & {"Prénoms"}</th>
@@ -248,7 +248,7 @@ const UtilisateurNonEncadreurList = () => {
               Identité
             </p>
             <Row className='g-3'>
-              <Col xs='6'>
+              <Col xs='12' sm='6'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>
                     Nom <span className='text-danger'>*</span>
@@ -256,25 +256,25 @@ const UtilisateurNonEncadreurList = () => {
                   <Input disabled={viewing} value={form.nom} onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))} placeholder='BAMBA' />
                 </FormGroup>
               </Col>
-              <Col xs='6'>
+              <Col xs='12' sm='6'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Prénoms</Label>
                   <Input disabled={viewing} value={form.prenoms} onChange={(e) => setForm((f) => ({ ...f, prenoms: e.target.value }))} placeholder='Seydou' />
                 </FormGroup>
               </Col>
-              <Col xs='4'>
+              <Col xs='12' sm='4'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Genre</Label>
                   <Combobox isDisabled={viewing} options={GENRES_OPT} value={form.genre} onChange={(opt) => opt && setForm((f) => ({ ...f, genre: opt }))} />
                 </FormGroup>
               </Col>
-              <Col xs='4'>
+              <Col xs='12' sm='4'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Nationalité</Label>
                   <Input disabled={viewing} value={form.nat} onChange={(e) => setForm((f) => ({ ...f, nat: e.target.value }))} />
                 </FormGroup>
               </Col>
-              <Col xs='4'>
+              <Col xs='12' sm='4'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>
                     Matricule <span className='text-danger'>*</span>

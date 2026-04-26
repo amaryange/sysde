@@ -92,8 +92,8 @@ const InfoPanel = ({ poste, onClose }: InfoPanelProps) => {
         borderRadius: 8,
         padding: '14px 16px',
         boxShadow: '0 2px 12px rgba(0,0,0,0.18)',
-        minWidth: 220,
-        maxWidth: 280,
+        minWidth: 200,
+        maxWidth: 'min(280px, calc(100% - 24px))',
         fontSize: 13,
       }}
     >

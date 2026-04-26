@@ -24,21 +24,23 @@ const ParametresContainer = () => {
 
   return (
     <Container fluid className='p-4'>
-      <div className='d-flex justify-content-between align-items-center mb-4'>
+      <div className='d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4'>
         <h4 className='mb-0'>Paramètres</h4>
-        <Nav className='border-tab nav-secondary' tabs>
-          {TABS.map((t) => (
-            <NavItem key={t.id}>
-              <NavLink
-                className={activeTab === t.id ? 'active' : ''}
-                onClick={() => setActiveTab(t.id)}
-                style={{ cursor: 'pointer', color: activeTab === t.id ? undefined : isDark ? '#9ca3af' : undefined }}
-              >
-                {t.label}
-              </NavLink>
-            </NavItem>
-          ))}
-        </Nav>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
+          <Nav className='border-tab nav-secondary flex-nowrap' tabs>
+            {TABS.map((t) => (
+              <NavItem key={t.id} style={{ whiteSpace: 'nowrap' }}>
+                <NavLink
+                  className={activeTab === t.id ? 'active' : ''}
+                  onClick={() => setActiveTab(t.id)}
+                  style={{ cursor: 'pointer', color: activeTab === t.id ? undefined : isDark ? '#9ca3af' : undefined }}
+                >
+                  {t.label}
+                </NavLink>
+              </NavItem>
+            ))}
+          </Nav>
+        </div>
       </div>
 
       <TabContent activeTab={activeTab}>

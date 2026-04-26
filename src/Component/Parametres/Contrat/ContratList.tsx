@@ -119,7 +119,7 @@ const ContratList = () => {
       <Card>
         <CardBody className='p-0'>
           <div className='table-responsive'>
-            <Table className='table table-hover mb-0' style={{ tableLayout: 'fixed', minWidth: 860 }}>
+            <Table className='table table-hover mb-0' style={{ minWidth: 580 }}>
               <thead className='table-light'>
                 <tr>
                   <th style={{ width: '18%' }}>Numéro</th>
@@ -182,16 +182,16 @@ const ContratList = () => {
         <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
           <p className='text-muted fw-semibold small mb-2'>Identification</p>
           <Row>
-            <Col md='6'><FormGroup><Label>Numéro contrat <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.num} onChange={(e) => setForm((f) => ({ ...f, num: e.target.value }))} placeholder='CTR-2024-001' /></FormGroup></Col>
-            <Col md='6'><FormGroup><Label>Opérateur</Label><Combobox isDisabled={viewing} options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></FormGroup></Col>
+            <Col xs='12' sm='6'><FormGroup><Label>Numéro contrat <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.num} onChange={(e) => setForm((f) => ({ ...f, num: e.target.value }))} placeholder='CTR-2024-001' /></FormGroup></Col>
+            <Col xs='12' sm='6'><FormGroup><Label>Opérateur</Label><Combobox isDisabled={viewing} options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></FormGroup></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Période</p>
           <Row>
-            <Col md='4'><DateInput disabled={viewing} label='Début'     required value={form.debut}     onChange={(v) => setForm((f) => ({ ...f, debut: v }))}     /></Col>
-            <Col md='4'><DateInput disabled={viewing} label='Fin'       required value={form.fin}       onChange={(v) => setForm((f) => ({ ...f, fin: v }))}       /></Col>
-            <Col md='4'><DateInput disabled={viewing} label='Signature'          value={form.signature} onChange={(v) => setForm((f) => ({ ...f, signature: v }))} /></Col>
+            <Col xs='12' sm='4'><DateInput disabled={viewing} label='Début'     required value={form.debut}     onChange={(v) => setForm((f) => ({ ...f, debut: v }))}     /></Col>
+            <Col xs='12' sm='4'><DateInput disabled={viewing} label='Fin'       required value={form.fin}       onChange={(v) => setForm((f) => ({ ...f, fin: v }))}       /></Col>
+            <Col xs='12' sm='4'><DateInput disabled={viewing} label='Signature'          value={form.signature} onChange={(v) => setForm((f) => ({ ...f, signature: v }))} /></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />

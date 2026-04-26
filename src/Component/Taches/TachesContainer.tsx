@@ -10,28 +10,30 @@ const TachesContainer = () => {
 
   return (
     <Container fluid>
-      <div className='d-flex justify-content-between align-items-center mb-4'>
+      <div className='d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4'>
         <h4 className='mb-0'>Tâches</h4>
-        <Nav className='border-tab nav-secondary' tabs>
-          <NavItem>
-            <NavLink
-              className={activeTab === 'utilisateur' ? 'active' : ''}
-              onClick={() => setActiveTab('utilisateur')}
-              style={{ cursor: 'pointer', color: activeTab === 'utilisateur' ? undefined : isDark ? '#9ca3af' : undefined }}
-            >
-              Utilisateur
-            </NavLink>
-          </NavItem>
-          <NavItem>
-            <NavLink
-              className={activeTab === 'collaborateur' ? 'active' : ''}
-              onClick={() => setActiveTab('collaborateur')}
-              style={{ cursor: 'pointer', color: activeTab === 'collaborateur' ? undefined : isDark ? '#9ca3af' : undefined }}
-            >
-              {"Chef de département"}
-            </NavLink>
-          </NavItem>
-        </Nav>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
+          <Nav className='border-tab nav-secondary flex-nowrap' tabs>
+            <NavItem style={{ whiteSpace: 'nowrap' }}>
+              <NavLink
+                className={activeTab === 'utilisateur' ? 'active' : ''}
+                onClick={() => setActiveTab('utilisateur')}
+                style={{ cursor: 'pointer', color: activeTab === 'utilisateur' ? undefined : isDark ? '#9ca3af' : undefined }}
+              >
+                Utilisateur
+              </NavLink>
+            </NavItem>
+            <NavItem style={{ whiteSpace: 'nowrap' }}>
+              <NavLink
+                className={activeTab === 'collaborateur' ? 'active' : ''}
+                onClick={() => setActiveTab('collaborateur')}
+                style={{ cursor: 'pointer', color: activeTab === 'collaborateur' ? undefined : isDark ? '#9ca3af' : undefined }}
+              >
+                {"Chef de département"}
+              </NavLink>
+            </NavItem>
+          </Nav>
+        </div>
       </div>
 
       <TabContent activeTab={activeTab}>

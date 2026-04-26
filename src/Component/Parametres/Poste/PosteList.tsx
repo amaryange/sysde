@@ -134,7 +134,7 @@ const PosteList = () => {
       <Card>
         <CardBody className='p-0'>
           <div className='table-responsive'>
-            <Table className='table table-hover mb-0' style={{ tableLayout: 'fixed', minWidth: 900 }}>
+            <Table className='table table-hover mb-0' style={{ minWidth: 620 }}>
               <thead className='table-light'>
                 <tr>
                   <th style={{ width: '11%' }}>Code</th>
@@ -197,28 +197,28 @@ const PosteList = () => {
         <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
           <p className='text-muted fw-semibold small mb-2'>Identification</p>
           <Row>
-            <Col md='8'><FormGroup><Label>Libellé</Label><Input disabled={viewing} value={form.lib} onChange={(e) => setForm((f) => ({ ...f, lib: e.target.value }))} placeholder='Ex: Chef Secteur Abengourou' /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Code <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.cde} onChange={(e) => setForm((f) => ({ ...f, cde: e.target.value }))} placeholder='CS-ABG-001' /></FormGroup></Col>
+            <Col xs='12' sm='8'><FormGroup><Label>Libellé</Label><Input disabled={viewing} value={form.lib} onChange={(e) => setForm((f) => ({ ...f, lib: e.target.value }))} placeholder='Ex: Chef Secteur Abengourou' /></FormGroup></Col>
+            <Col xs='12' sm='4'><FormGroup><Label>Code <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.cde} onChange={(e) => setForm((f) => ({ ...f, cde: e.target.value }))} placeholder='CS-ABG-001' /></FormGroup></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Affectation</p>
           <Row>
-            <Col md='6'><Combobox label='Rôle'      isDisabled={viewing} options={ROLES_OPT}     value={form.role}      onChange={(opt) => opt && setForm((f) => ({ ...f, role: opt }))}      /></Col>
-            <Col md='6'><Combobox label='Opérateur' isDisabled={viewing} options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></Col>
+            <Col xs='12' sm='6'><Combobox label='Rôle'      isDisabled={viewing} options={ROLES_OPT}     value={form.role}      onChange={(opt) => opt && setForm((f) => ({ ...f, role: opt }))}      /></Col>
+            <Col xs='12' sm='6'><Combobox label='Opérateur' isDisabled={viewing} options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Localisation</p>
           <Row>
-            <Col md='4'><FormGroup><Label>Secteur</Label>   <Input disabled={viewing} value={form.secteur} onChange={(e) => setForm((f) => ({ ...f, secteur: e.target.value }))}   /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Lot(s)</Label>    <Input disabled={viewing} value={form.lot}     onChange={(e) => setForm((f) => ({ ...f, lot: e.target.value }))}        placeholder='Ex: 1, 2, 3' /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Section(s)</Label><Input disabled={viewing} value={form.section} onChange={(e) => setForm((f) => ({ ...f, section: e.target.value }))}    placeholder='Ex: A, B'    /></FormGroup></Col>
+            <Col xs='12' sm='4'><FormGroup><Label>Secteur</Label>   <Input disabled={viewing} value={form.secteur} onChange={(e) => setForm((f) => ({ ...f, secteur: e.target.value }))}   /></FormGroup></Col>
+            <Col xs='12' sm='4'><FormGroup><Label>Lot(s)</Label>    <Input disabled={viewing} value={form.lot}     onChange={(e) => setForm((f) => ({ ...f, lot: e.target.value }))}        placeholder='Ex: 1, 2, 3' /></FormGroup></Col>
+            <Col xs='12' sm='4'><FormGroup><Label>Section(s)</Label><Input disabled={viewing} value={form.section} onChange={(e) => setForm((f) => ({ ...f, section: e.target.value }))}    placeholder='Ex: A, B'    /></FormGroup></Col>
           </Row>
           <Row>
-            <Col md='4'><FormGroup><Label>Région</Label>         <Input disabled={viewing} value={form.region}      onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}      /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Département</Label>    <Input disabled={viewing} value={form.departement} onChange={(e) => setForm((f) => ({ ...f, departement: e.target.value }))} /></FormGroup></Col>
-            <Col md='4'><FormGroup><Label>Sous-préfecture</Label><Input disabled={viewing} value={form.sprefecture} onChange={(e) => setForm((f) => ({ ...f, sprefecture: e.target.value }))} /></FormGroup></Col>
+            <Col xs='12' sm='4'><FormGroup><Label>Région</Label>         <Input disabled={viewing} value={form.region}      onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}      /></FormGroup></Col>
+            <Col xs='12' sm='4'><FormGroup><Label>Département</Label>    <Input disabled={viewing} value={form.departement} onChange={(e) => setForm((f) => ({ ...f, departement: e.target.value }))} /></FormGroup></Col>
+            <Col xs='12' sm='4'><FormGroup><Label>Sous-préfecture</Label><Input disabled={viewing} value={form.sprefecture} onChange={(e) => setForm((f) => ({ ...f, sprefecture: e.target.value }))} /></FormGroup></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />

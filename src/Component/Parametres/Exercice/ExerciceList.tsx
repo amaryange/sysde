@@ -142,7 +142,7 @@ const ExerciceList = () => {
       <Card>
         <CardBody className='p-0'>
           <div className='table-responsive'>
-            <Table className='table table-hover mb-0' style={{ tableLayout: 'fixed', minWidth: 800 }}>
+            <Table className='table table-hover mb-0' style={{ minWidth: 560 }}>
               <thead className='table-light'>
                 <tr>
                   <th style={{ width: '22%' }}>Libellé</th>
@@ -222,8 +222,8 @@ const ExerciceList = () => {
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Période</p>
           <Row>
-            <Col md='6'><DateInput disabled={viewing} label='Date de début'   required value={form.annee}   onChange={(v) => setForm((f) => ({ ...f, annee: v }))}   /></Col>
-            <Col md='6'><DateInput disabled={viewing} label='Date de clôture'          value={form.cloture} onChange={(v) => setForm((f) => ({ ...f, cloture: v }))} /></Col>
+            <Col xs='12' sm='6'><DateInput disabled={viewing} label='Date de début'   required value={form.annee}   onChange={(v) => setForm((f) => ({ ...f, annee: v }))}   /></Col>
+            <Col xs='12' sm='6'><DateInput disabled={viewing} label='Date de clôture'          value={form.cloture} onChange={(v) => setForm((f) => ({ ...f, cloture: v }))} /></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />

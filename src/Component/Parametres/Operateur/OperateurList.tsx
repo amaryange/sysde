@@ -117,7 +117,7 @@ const OperateurList = () => {
       <Card>
         <CardBody className='p-0'>
           <div className='table-responsive'>
-            <Table className='table table-hover mb-0' style={{ tableLayout: 'fixed', minWidth: 860 }}>
+            <Table className='table table-hover mb-0' style={{ minWidth: 580 }}>
               <thead className='table-light'>
                 <tr>
                   <th style={{ width: '32%' }}>Raison sociale</th>
@@ -183,8 +183,8 @@ const OperateurList = () => {
           <p className='text-muted fw-semibold small mb-2'>Coordonnées</p>
           <FormGroup><Label>Adresse</Label><Input disabled={viewing} value={form.adresse} onChange={(e) => setForm((f) => ({ ...f, adresse: e.target.value }))} /></FormGroup>
           <Row>
-            <Col md='6'><FormGroup><Label>Email</Label>    <Input disabled={viewing} type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='contact@exemple.ci' /></FormGroup></Col>
-            <Col md='6'><FormGroup><Label>Téléphone</Label><Input disabled={viewing}             value={form.tel}   onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))}   placeholder='0X XX XX XX'         /></FormGroup></Col>
+            <Col xs='12' sm='6'><FormGroup><Label>Email</Label>    <Input disabled={viewing} type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='contact@exemple.ci' /></FormGroup></Col>
+            <Col xs='12' sm='6'><FormGroup><Label>Téléphone</Label><Input disabled={viewing}             value={form.tel}   onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))}   placeholder='0X XX XX XX'         /></FormGroup></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />

@@ -46,6 +46,11 @@ const EvolutionChart = () => {
                 label: { text: 'Aujourd\'hui', style: { color: '#fff', background: PRIMARY, fontSize: '11px' } },
               }],
             },
+            responsive: [
+              { breakpoint: 992, options: { chart: { height: 220 } } },
+              { breakpoint: 768, options: { chart: { height: 200 } } },
+              { breakpoint: 480, options: { chart: { height: 180 }, legend: { position: 'bottom' }, xaxis: { labels: { rotate: -45 } } } },
+            ],
           }}
         />
       </CardBody>

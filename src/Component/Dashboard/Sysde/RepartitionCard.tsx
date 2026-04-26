@@ -12,7 +12,11 @@ const RepartitionCard = () => {
       </CardHeader>
       <CardBody>
         <Chart
-          options={RepartitionChart.options}
+          options={{ ...RepartitionChart.options, responsive: [
+            { breakpoint: 992, options: { chart: { height: 240 } } },
+            { breakpoint: 768, options: { chart: { height: 220 } } },
+            { breakpoint: 480, options: { chart: { height: 190 } } },
+          ]}}
           series={RepartitionChart.series}
           type='donut'
           height={280}

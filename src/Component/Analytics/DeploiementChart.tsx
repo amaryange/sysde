@@ -39,6 +39,11 @@ const DeploiementChart = () => {
             },
             fill: { colors: [PRIMARY] },
             labels: [`${kpiData.postesPouvus} / ${kpiData.postesTotal} postes`],
+            responsive: [
+              { breakpoint: 992, options: { chart: { height: 210 } } },
+              { breakpoint: 768, options: { chart: { height: 190 } } },
+              { breakpoint: 480, options: { chart: { height: 170 } } },
+            ],
           }}
         />
       </CardBody>
