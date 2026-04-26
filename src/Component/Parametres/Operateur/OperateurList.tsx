@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import AppDrawer from '@/Component/Common/AppDrawer';
 import { UserPlus, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
@@ -158,28 +159,27 @@ const OperateurList = () => {
         </CardBody>
       </Card>
 
-      <Modal isOpen={modal} toggle={() => setModal(false)}>
-        <ModalHeader toggle={() => setModal(false)}>{editing ? "Modifier l'opérateur" : 'Ajouter un opérateur'}</ModalHeader>
-        <ModalBody>
-          <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-            <FormGroup><Label>Raison sociale <span className='text-danger'>*</span></Label><Input value={form.rs}       onChange={(e) => setForm((f) => ({ ...f, rs: e.target.value }))}       placeholder='Ex: SAPH'  /></FormGroup>
-            <FormGroup><Label>Acronyme <span className='text-danger'>*</span></Label>      <Input value={form.acronyme} onChange={(e) => setForm((f) => ({ ...f, acronyme: e.target.value }))} placeholder='Ex: SPH'   /></FormGroup>
-            <FormGroup><Label>Adresse</Label>                                               <Input value={form.adresse}  onChange={(e) => setForm((f) => ({ ...f, adresse: e.target.value }))}  /></FormGroup>
-            <Row>
-              <Col md='6'><FormGroup><Label>Email</Label>    <Input type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='contact@exemple.ci' /></FormGroup></Col>
-              <Col md='6'><FormGroup><Label>Téléphone</Label><Input             value={form.tel}   onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))}   placeholder='0X XX XX XX'         /></FormGroup></Col>
-            </Row>
-            <FormGroup check>
-              <Input type='checkbox' checked={form.encadreur} onChange={(e) => setForm((f) => ({ ...f, encadreur: e.target.checked }))} />
-              <Label check>Opérateur d'encadrement</Label>
-            </FormGroup>
-          </Form>
-        </ModalBody>
-        <ModalFooter>
-          <Button color='primary' onClick={handleSave}>Enregistrer</Button>
-          <Button color='light' onClick={() => setModal(false)}>Annuler</Button>
-        </ModalFooter>
-      </Modal>
+      <AppDrawer
+        isOpen={modal}
+        toggle={() => setModal(false)}
+        title={editing ? "Modifier l'opérateur" : 'Ajouter un opérateur'}
+        onSave={handleSave}
+        onCancel={() => setModal(false)}
+      >
+        <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+          <FormGroup><Label>Raison sociale <span className='text-danger'>*</span></Label><Input value={form.rs}       onChange={(e) => setForm((f) => ({ ...f, rs: e.target.value }))}       placeholder='Ex: SAPH'  /></FormGroup>
+          <FormGroup><Label>Acronyme <span className='text-danger'>*</span></Label>      <Input value={form.acronyme} onChange={(e) => setForm((f) => ({ ...f, acronyme: e.target.value }))} placeholder='Ex: SPH'   /></FormGroup>
+          <FormGroup><Label>Adresse</Label>                                               <Input value={form.adresse}  onChange={(e) => setForm((f) => ({ ...f, adresse: e.target.value }))}  /></FormGroup>
+          <Row>
+            <Col md='6'><FormGroup><Label>Email</Label>    <Input type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='contact@exemple.ci' /></FormGroup></Col>
+            <Col md='6'><FormGroup><Label>Téléphone</Label><Input             value={form.tel}   onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))}   placeholder='0X XX XX XX'         /></FormGroup></Col>
+          </Row>
+          <FormGroup check>
+            <Input type='checkbox' checked={form.encadreur} onChange={(e) => setForm((f) => ({ ...f, encadreur: e.target.checked }))} />
+            <Label check>Opérateur d'encadrement</Label>
+          </FormGroup>
+        </Form>
+      </AppDrawer>
     </div>
   );
 };
