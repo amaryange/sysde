@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, Alert } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
-import { PlusCircle, Edit2, Trash2 } from 'react-feather';
+import { PlusCircle, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -59,6 +59,7 @@ const ExerciceList = () => {
   const [data,    setData   ] = useState<Exercice[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<Exercice | null>(null);
+  const [viewing, setViewing] = useState(false);
   const [form,    setForm   ] = useState(emptyForm);
 
   const [fLib,    setFLib   ] = useState(() => searchParams.get('ex_lib')   ?? '');
@@ -83,12 +84,10 @@ const ExerciceList = () => {
   const handleStatut  = (v: string) => { setFStatut(v);  setPage(1); pushUrl({ ex_sta: v || null, ex_page: null }); };
   const handlePage    = (p: number) => { setPage(p); pushUrl({ ex_page: p > 1 ? String(p) : null }); };
 
-  const openAdd  = () => { setEditing(null); setForm(emptyForm()); setModal(true); };
-  const openEdit = (e: Exercice) => {
-    setEditing(e);
-    setForm({ lib: e.lib, annee: e.annee, cloture: e.cloture, statut: e.statut, contrat: CONTRATS_OPT.find((c) => c.value === e.contrat) ?? CONTRATS_OPT[0] });
-    setModal(true);
-  };
+  const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
+  const fillForm = (e: Exercice) => ({ lib: e.lib, annee: e.annee, cloture: e.cloture, statut: e.statut, contrat: CONTRATS_OPT.find((c) => c.value === e.contrat) ?? CONTRATS_OPT[0] });
+  const openEdit = (e: Exercice) => { setViewing(false); setEditing(e); setForm(fillForm(e)); setModal(true); };
+  const openView = (e: Exercice) => { setViewing(true);  setEditing(null); setForm(fillForm(e)); setModal(true); };
   const handleDelete = (id: number) => {
     if (!window.confirm('Supprimer cet exercice ?')) return;
     const target = data.find((e) => e.id === id);
@@ -171,6 +170,7 @@ const ExerciceList = () => {
                     <td className='text-muted'>{e.cloture || '—'}</td>
                     <td><Badge color={e.statut ? 'success' : 'secondary'} className='badge-light'>{e.statut ? 'En cours' : 'Clôturé'}</Badge></td>
                     <td className='text-end'>
+                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openView(e)}><Eye size={14} /></Button>
                       <Button color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(e)}><Edit2 size={14} /></Button>
                       <Button color='light' size='sm' className='p-1' onClick={() => handleDelete(e.id)}><Trash2 size={14} className='text-danger' /></Button>
                     </td>
@@ -189,21 +189,23 @@ const ExerciceList = () => {
       <AppDrawer
         isOpen={modal}
         toggle={() => setModal(false)}
-        title={editing ? "Modifier l'exercice" : 'Ajouter un exercice'}
+        title={viewing ? "Détails de l'exercice" : editing ? "Modifier l'exercice" : 'Ajouter un exercice'}
         onCancel={() => setModal(false)}
-        footer={
+        footer={viewing ? (
+          <Button color='light' onClick={() => setModal(false)}>Fermer</Button>
+        ) : (
           <div className='d-flex gap-2'>
             <Button color='primary' onClick={handleSave} disabled={limiteAtteinte}>Enregistrer</Button>
             <Button color='light' onClick={() => setModal(false)}>Annuler</Button>
           </div>
-        }
+        )}
       >
         <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
           <p className='text-muted fw-semibold small mb-2'>Contrat</p>
-          <FormGroup><Label>Libellé <span className='text-danger'>*</span></Label><Input value={form.lib} onChange={(e) => setForm((f) => ({ ...f, lib: e.target.value }))} placeholder='Ex: Exercice 2024' /></FormGroup>
-          <FormGroup><Label>Contrat</Label><Combobox options={CONTRATS_OPT} value={form.contrat} onChange={(opt) => opt && setForm((f) => ({ ...f, contrat: opt }))} /></FormGroup>
+          <FormGroup><Label>Libellé <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.lib} onChange={(e) => setForm((f) => ({ ...f, lib: e.target.value }))} placeholder='Ex: Exercice 2024' /></FormGroup>
+          <FormGroup><Label>Contrat</Label><Combobox isDisabled={viewing} options={CONTRATS_OPT} value={form.contrat} onChange={(opt) => opt && setForm((f) => ({ ...f, contrat: opt }))} /></FormGroup>
 
-          {maxExercices > 0 && (
+          {!viewing && maxExercices > 0 && (
             <Alert color={limiteAtteinte ? 'danger' : nbExistants === maxExercices - 1 ? 'warning' : 'info'} className='py-2 px-3 mb-3' style={{ fontSize: 13 }}>
               {limiteAtteinte
                 ? <>Ce contrat a atteint sa limite de <strong>{maxExercices} exercice{maxExercices > 1 ? 's' : ''}</strong> ({maxExercices} an{maxExercices > 1 ? 's' : ''} de durée). Impossible d'en ajouter un autre.</>
@@ -215,14 +217,14 @@ const ExerciceList = () => {
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Période</p>
           <Row>
-            <Col md='6'><DateInput label='Date de début'   required value={form.annee}   onChange={(v) => setForm((f) => ({ ...f, annee: v }))}   /></Col>
-            <Col md='6'><DateInput label='Date de clôture'          value={form.cloture} onChange={(v) => setForm((f) => ({ ...f, cloture: v }))} /></Col>
+            <Col md='6'><DateInput disabled={viewing} label='Date de début'   required value={form.annee}   onChange={(v) => setForm((f) => ({ ...f, annee: v }))}   /></Col>
+            <Col md='6'><DateInput disabled={viewing} label='Date de clôture'          value={form.cloture} onChange={(v) => setForm((f) => ({ ...f, cloture: v }))} /></Col>
           </Row>
 
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Statut</p>
           <FormGroup check>
-            <Input type='checkbox' checked={form.statut} onChange={(e) => setForm((f) => ({ ...f, statut: e.target.checked }))} />
+            <Input disabled={viewing} type='checkbox' checked={form.statut} onChange={(e) => setForm((f) => ({ ...f, statut: e.target.checked }))} />
             <Label check>Exercice en cours</Label>
           </FormGroup>
         </Form>
