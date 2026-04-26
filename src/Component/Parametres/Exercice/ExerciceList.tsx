@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, Alert, UncontrolledTooltip } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
+import ConfirmDelete from '@/Component/Common/ConfirmDelete';
 import { PlusCircle, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
@@ -59,8 +60,9 @@ const ExerciceList = () => {
   const [data,    setData   ] = useState<Exercice[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<Exercice | null>(null);
-  const [viewing, setViewing] = useState(false);
-  const [form,    setForm   ] = useState(emptyForm);
+  const [viewing,      setViewing     ] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Exercice | null>(null);
+  const [form,         setForm        ] = useState(emptyForm);
 
   const [fLib,    setFLib   ] = useState(() => searchParams.get('ex_lib')   ?? '');
   const [fCt,     setFCt    ] = useState(() => searchParams.get('ex_ct')    ?? '');
@@ -88,11 +90,11 @@ const ExerciceList = () => {
   const fillForm = (e: Exercice) => ({ lib: e.lib, annee: e.annee, cloture: e.cloture, statut: e.statut, contrat: CONTRATS_OPT.find((c) => c.value === e.contrat) ?? CONTRATS_OPT[0] });
   const openEdit = (e: Exercice) => { setViewing(false); setEditing(e); setForm(fillForm(e)); setModal(true); };
   const openView = (e: Exercice) => { setViewing(true);  setEditing(null); setForm(fillForm(e)); setModal(true); };
-  const handleDelete = (id: number) => {
-    if (!window.confirm('Supprimer cet exercice ?')) return;
-    const target = data.find((e) => e.id === id);
-    setData((p) => p.filter((e) => e.id !== id));
-    log('DELETE', 'Exercice', `Suppression de l'exercice ${target?.lib ?? id}`, target?.lib);
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    setData((p) => p.filter((e) => e.id !== deleteTarget.id));
+    log('DELETE', 'Exercice', `Suppression de l'exercice ${deleteTarget.lib}`, deleteTarget.lib);
+    setDeleteTarget(null);
   };
 
   const maxExercices  = dureeAns(form.contrat.value);
@@ -174,7 +176,7 @@ const ExerciceList = () => {
                       <UncontrolledTooltip target={`ex-view-${e.id}`}>Consulter</UncontrolledTooltip>
                       <Button id={`ex-edit-${e.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(e)}><Edit2 size={14} /></Button>
                       <UncontrolledTooltip target={`ex-edit-${e.id}`}>Modifier</UncontrolledTooltip>
-                      <Button id={`ex-del-${e.id}`} color='light' size='sm' className='p-1' onClick={() => handleDelete(e.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <Button id={`ex-del-${e.id}`} color='light' size='sm' className='p-1' onClick={() => setDeleteTarget(e)}><Trash2 size={14} className='text-danger' /></Button>
                       <UncontrolledTooltip target={`ex-del-${e.id}`}>Supprimer</UncontrolledTooltip>
                     </td>
                   </tr>
@@ -232,6 +234,13 @@ const ExerciceList = () => {
           </FormGroup>
         </Form>
       </AppDrawer>
+
+      <ConfirmDelete
+        isOpen={!!deleteTarget}
+        message={`Voulez-vous vraiment supprimer l'exercice "${deleteTarget?.lib}" ? Cette action est irréversible.`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };
