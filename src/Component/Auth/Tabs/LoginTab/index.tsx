@@ -6,8 +6,10 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/Store/useAuthStore';
 import { toast } from 'react-toastify';
 
-const DEFAULT_USERS: Record<string, { password: string; name: string; role: string }> = {
-  'Test123@gmail.com': { password: 'Test@123', name: 'Admin SAPH', role: 'admin' },
+const DEFAULT_USERS: Record<string, { password: string; name: string; role: string; operateur?: string }> = {
+  'Test123@gmail.com': { password: 'Test@123',     name: 'Admin SYSDE',  role: 'admin' },
+  'admin@firca.ci':    { password: 'Firca@2024',   name: 'Admin FIRCA',  role: 'admin', operateur: 'FIRCA'   },
+  'admin@apromac.ci':  { password: 'Apromac@2024', name: 'Admin APROMAC',role: 'admin', operateur: 'APROMAC' },
 };
 
 const LoginTab = () => {
@@ -33,7 +35,7 @@ const LoginTab = () => {
 
     const found = DEFAULT_USERS[email];
     if (found && found.password === password) {
-      login({ email, name: found.name, role: found.role, password });
+      login({ email, name: found.name, role: found.role, password, operateur: found.operateur });
       toast.success('Connexion réussie');
       router.push('/dashboard');
     } else {

@@ -10,6 +10,7 @@ import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 import { useLog } from '@/hooks/useLog';
+import { useAuthStore } from '@/Store/useAuthStore';
 
 type Utilisateur = { id: number; nom: string; prenoms: string; genre: string; nat: string; mat: string; email: string; tel: string; poste: string; operateur: string; actif: boolean };
 
@@ -59,7 +60,9 @@ const UtilisateurNonEncadreurList = () => {
   const pathname     = usePathname();
   const searchParams = useSearchParams();
 
-  const log = useLog();
+  const log       = useLog();
+  const authUser  = useAuthStore((s) => s.user);
+  const lockedOp  = authUser?.operateur ?? null; // 'FIRCA' | 'APROMAC' | null (super-admin)
   const [data,    setData   ] = useState<Utilisateur[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<Utilisateur | null>(null);
@@ -97,7 +100,16 @@ const UtilisateurNonEncadreurList = () => {
   const handleStatut= (v: string) => { setFStatut(v);setPage(1); pushUrl({ ut_sta: v || null, ut_page: null }); };
   const handlePage  = (p: number) => { setPage(p); pushUrl({ ut_page: p > 1 ? String(p) : null }); };
 
-  const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
+  const openAdd  = () => {
+    const base = emptyForm();
+    if (lockedOp) {
+      const opOpt    = OPERATEURS_OPT.find((o) => o.value === lockedOp) ?? OPERATEURS_OPT[0];
+      const postesOp = POSTES_PAR_OP[lockedOp] ?? [];
+      base.operateur = opOpt;
+      base.poste     = postesOp[0] ?? base.poste;
+    }
+    setViewing(false); setEditing(null); setForm(base); setModal(true);
+  };
   const fillForm = (u: Utilisateur) => ({ nom: u.nom, prenoms: u.prenoms, nat: u.nat, mat: u.mat, mdp: '', email: u.email, tel: u.tel, actif: u.actif, genre: GENRES_OPT.find((g) => g.value === u.genre) ?? GENRES_OPT[0], poste: POSTES_OPT.find((p) => p.value === u.poste) ?? POSTES_OPT[0], operateur: OPERATEURS_OPT.find((o) => o.value === u.operateur) ?? OPERATEURS_OPT[0] });
   const openEdit = (u: Utilisateur) => { setViewing(false); setEditing(u); setForm(fillForm(u)); setModal(true); };
   const openView = (u: Utilisateur) => { setViewing(true);  setEditing(null); setForm(fillForm(u)); setModal(true); };
@@ -124,6 +136,7 @@ const UtilisateurNonEncadreurList = () => {
   const filtered = useMemo(() => data.filter((u) => {
     const nom    = `${u.nom} ${u.prenoms}`.toLowerCase();
     return (
+      (!lockedOp || u.operateur === lockedOp) &&
       (!fNom    || nom.includes(fNom.toLowerCase())) &&
       (!fMat    || u.mat.toLowerCase().includes(fMat.toLowerCase())) &&
       (!fOp     || u.operateur === fOp) &&
@@ -154,8 +167,8 @@ const UtilisateurNonEncadreurList = () => {
                 <tr>
                   <th style={{ width: '18%' }}>Nom & {"Prénoms"}</th>
                   <th style={{ width: '9%'  }}>Matricule</th>
-                  <th style={{ width: '10%' }}>{"Opérateur"}</th>
-                  <th style={{ width: '16%' }}>Poste</th>
+                  {!lockedOp && <th style={{ width: '10%' }}>{"Opérateur"}</th>}
+                  <th style={{ width: lockedOp ? '26%' : '16%' }}>Poste</th>
                   <th style={{ width: '18%' }}>Email</th>
                   <th style={{ width: '12%' }}>{"Téléphone"}</th>
                   <th style={{ width: '8%'  }}>Statut</th>
@@ -168,9 +181,11 @@ const UtilisateurNonEncadreurList = () => {
                   <th style={colStyle}>
                     <Input bsSize='sm' style={inputStyle} placeholder='Mat…' value={fMat}   onChange={(e) => handleMat(e.target.value)}   />
                   </th>
-                  <th style={colStyle}>
-                    <Combobox options={OP_COL_FILTER} value={OP_COL_FILTER.find((o) => o.value === fOp) ?? OP_COL_FILTER[0]} onChange={(opt) => handleOp(opt?.value ?? '')} isClearable={false} compact />
-                  </th>
+                  {!lockedOp && (
+                    <th style={colStyle}>
+                      <Combobox options={OP_COL_FILTER} value={OP_COL_FILTER.find((o) => o.value === fOp) ?? OP_COL_FILTER[0]} onChange={(opt) => handleOp(opt?.value ?? '')} isClearable={false} compact />
+                    </th>
+                  )}
                   <th style={colStyle}>
                     <Input bsSize='sm' style={inputStyle} placeholder='Poste…' value={fPoste} onChange={(e) => handlePoste(e.target.value)} />
                   </th>
@@ -188,12 +203,12 @@ const UtilisateurNonEncadreurList = () => {
               </thead>
               <tbody>
                 {paginated.length === 0 ? (
-                  <tr><td colSpan={8} className='text-center text-muted py-4'>Aucun résultat</td></tr>
+                  <tr><td colSpan={lockedOp ? 7 : 8} className='text-center text-muted py-4'>Aucun résultat</td></tr>
                 ) : paginated.map((u) => (
                   <tr key={u.id}>
                     <td className='f-w-600' style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.nom} {u.prenoms}</td>
                     <td><code>{u.mat}</code></td>
-                    <td>{u.operateur}</td>
+                    {!lockedOp && <td>{u.operateur}</td>}
                     <td className='text-muted' style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}><code>{u.poste}</code></td>
                     <td className='text-muted' style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</td>
                     <td className='text-muted'>{u.tel}</td>
@@ -278,9 +293,9 @@ const UtilisateurNonEncadreurList = () => {
             <Row className='g-3'>
               <Col xs='12'>
                 <Combobox
-                  isDisabled={viewing}
-                  label='Opérateur (non-encadreur)'
-                  options={OPERATEURS_OPT}
+                  isDisabled={viewing || !!lockedOp}
+                  label={lockedOp ? `Opérateur (${lockedOp})` : 'Opérateur (non-encadreur)'}
+                  options={lockedOp ? OPERATEURS_OPT.filter((o) => o.value === lockedOp) : OPERATEURS_OPT}
                   value={form.operateur}
                   onChange={(opt) => {
                     if (!opt) return;
@@ -290,7 +305,13 @@ const UtilisateurNonEncadreurList = () => {
                 />
               </Col>
               <Col xs='12'>
-                <Combobox isDisabled={viewing} label='Poste' options={POSTES_PAR_OP[form.operateur.value] ?? []} value={form.poste} onChange={(opt) => opt && setForm((f) => ({ ...f, poste: opt }))} />
+                <Combobox
+                  isDisabled={viewing}
+                  label='Poste'
+                  options={POSTES_PAR_OP[form.operateur.value] ?? []}
+                  value={form.poste}
+                  onChange={(opt) => opt && setForm((f) => ({ ...f, poste: opt }))}
+                />
               </Col>
             </Row>
 

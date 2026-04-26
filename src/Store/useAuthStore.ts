@@ -7,6 +7,7 @@ export interface AuthUser {
   image?: string;
   role: string;
   password?: string; // conservé pour l'auth côté client
+  operateur?: string; // opérateur rattaché (FIRCA, APROMAC…) — absent = super-admin
 }
 
 interface AuthState {

@@ -19,7 +19,6 @@ const INITIAL: Operateur[] = [
   { id: 3, rs: 'SOCIETE AFRICAINE DE PLANTATION DHEVEA',                             acronyme: 'SAPH',    adresse: '08 BP 2188 Abidjan 08',        email: 'contact@saph.ci',    tel: '01020304', encadreur: true  },
   { id: 4, rs: 'SOCIETE DE CAOUTCHOUC DU PALMCI',                                   acronyme: 'PALMCI',  adresse: '15 Rue des Palmiers, Abidjan', email: 'info@palmci.ci',     tel: '05060708', encadreur: true  },
   { id: 5, rs: 'SOCIETE DE CAOUTCHOUC DE GRAND-BEREBY',                             acronyme: 'SOGB',    adresse: 'Grand-Béréby, Sud-Ouest',      email: 'sogb@sogb.ci',       tel: '07080910', encadreur: true  },
-  { id: 6, rs: 'COMPAGNIE HEVECAM',                                                  acronyme: 'HVCM',    adresse: 'Niété, Cameroun',              email: 'hevecam@hvc.ci',     tel: '03040506', encadreur: false },
 ];
 
 const PAGE_SIZE = 6;
