@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
-import { UserPlus, Edit2, Trash2 } from 'react-feather';
+import { UserPlus, Eye, Edit2, Trash2 } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -62,6 +62,7 @@ const UtilisateurNonEncadreurList = () => {
   const [data,    setData   ] = useState<Utilisateur[]>(INITIAL);
   const [modal,   setModal  ] = useState(false);
   const [editing, setEditing] = useState<Utilisateur | null>(null);
+  const [viewing, setViewing] = useState(false);
   const [form,    setForm   ] = useState<ReturnType<typeof emptyForm>>(emptyForm);
 
   const [fNom,      setFNom     ] = useState(() => searchParams.get('ut_nom')   ?? '');
@@ -94,12 +95,10 @@ const UtilisateurNonEncadreurList = () => {
   const handleStatut= (v: string) => { setFStatut(v);setPage(1); pushUrl({ ut_sta: v || null, ut_page: null }); };
   const handlePage  = (p: number) => { setPage(p); pushUrl({ ut_page: p > 1 ? String(p) : null }); };
 
-  const openAdd  = () => { setEditing(null); setForm(emptyForm()); setModal(true); };
-  const openEdit = (u: Utilisateur) => {
-    setEditing(u);
-    setForm({ nom: u.nom, prenoms: u.prenoms, nat: u.nat, mat: u.mat, mdp: '', email: u.email, tel: u.tel, actif: u.actif, genre: GENRES_OPT.find((g) => g.value === u.genre) ?? GENRES_OPT[0], poste: POSTES_OPT.find((p) => p.value === u.poste) ?? POSTES_OPT[0], operateur: OPERATEURS_OPT.find((o) => o.value === u.operateur) ?? OPERATEURS_OPT[0] });
-    setModal(true);
-  };
+  const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
+  const fillForm = (u: Utilisateur) => ({ nom: u.nom, prenoms: u.prenoms, nat: u.nat, mat: u.mat, mdp: '', email: u.email, tel: u.tel, actif: u.actif, genre: GENRES_OPT.find((g) => g.value === u.genre) ?? GENRES_OPT[0], poste: POSTES_OPT.find((p) => p.value === u.poste) ?? POSTES_OPT[0], operateur: OPERATEURS_OPT.find((o) => o.value === u.operateur) ?? OPERATEURS_OPT[0] });
+  const openEdit = (u: Utilisateur) => { setViewing(false); setEditing(u); setForm(fillForm(u)); setModal(true); };
+  const openView = (u: Utilisateur) => { setViewing(true);  setEditing(null); setForm(fillForm(u)); setModal(true); };
   const handleDelete = (id: number) => {
     if (!window.confirm('Supprimer cet utilisateur ?')) return;
     const target = data.find((u) => u.id === id);
@@ -198,8 +197,12 @@ const UtilisateurNonEncadreurList = () => {
                     <td className='text-muted'>{u.tel}</td>
                     <td><Badge color={u.actif ? 'success' : 'secondary'} className='badge-light'>{u.actif ? 'Actif' : 'Inactif'}</Badge></td>
                     <td className='text-end'>
-                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(u)}><Edit2 size={14} /></Button>
-                      <Button color='light' size='sm' className='p-1' onClick={() => handleDelete(u.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <Button id={`ut-view-${u.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openView(u)}><Eye size={14} /></Button>
+                      <UncontrolledTooltip target={`ut-view-${u.id}`}>Consulter</UncontrolledTooltip>
+                      <Button id={`ut-edit-${u.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(u)}><Edit2 size={14} /></Button>
+                      <UncontrolledTooltip target={`ut-edit-${u.id}`}>Modifier</UncontrolledTooltip>
+                      <Button id={`ut-del-${u.id}`} color='light' size='sm' className='p-1' onClick={() => handleDelete(u.id)}><Trash2 size={14} className='text-danger' /></Button>
+                      <UncontrolledTooltip target={`ut-del-${u.id}`}>Supprimer</UncontrolledTooltip>
                     </td>
                   </tr>
                 ))}
@@ -216,9 +219,10 @@ const UtilisateurNonEncadreurList = () => {
       <AppDrawer
         isOpen={modal}
         toggle={() => setModal(false)}
-        title={editing ? "Modifier l'utilisateur" : 'Ajouter un utilisateur'}
-        onSave={handleSave}
+        title={viewing ? "Détails de l'utilisateur" : editing ? "Modifier l'utilisateur" : 'Ajouter un utilisateur'}
+        onSave={viewing ? undefined : handleSave}
         onCancel={() => setModal(false)}
+        cancelLabel={viewing ? 'Fermer' : 'Annuler'}
       >
           <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
 
@@ -232,36 +236,25 @@ const UtilisateurNonEncadreurList = () => {
                   <Label className='form-label fw-semibold mb-1'>
                     Nom <span className='text-danger'>*</span>
                   </Label>
-                  <Input
-                    value={form.nom}
-                    onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))}
-                    placeholder='BAMBA'
-                  />
+                  <Input disabled={viewing} value={form.nom} onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))} placeholder='BAMBA' />
                 </FormGroup>
               </Col>
               <Col xs='6'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Prénoms</Label>
-                  <Input
-                    value={form.prenoms}
-                    onChange={(e) => setForm((f) => ({ ...f, prenoms: e.target.value }))}
-                    placeholder='Seydou'
-                  />
+                  <Input disabled={viewing} value={form.prenoms} onChange={(e) => setForm((f) => ({ ...f, prenoms: e.target.value }))} placeholder='Seydou' />
                 </FormGroup>
               </Col>
               <Col xs='4'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Genre</Label>
-                  <Combobox options={GENRES_OPT} value={form.genre} onChange={(opt) => opt && setForm((f) => ({ ...f, genre: opt }))} />
+                  <Combobox isDisabled={viewing} options={GENRES_OPT} value={form.genre} onChange={(opt) => opt && setForm((f) => ({ ...f, genre: opt }))} />
                 </FormGroup>
               </Col>
               <Col xs='4'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Nationalité</Label>
-                  <Input
-                    value={form.nat}
-                    onChange={(e) => setForm((f) => ({ ...f, nat: e.target.value }))}
-                  />
+                  <Input disabled={viewing} value={form.nat} onChange={(e) => setForm((f) => ({ ...f, nat: e.target.value }))} />
                 </FormGroup>
               </Col>
               <Col xs='4'>
@@ -269,11 +262,7 @@ const UtilisateurNonEncadreurList = () => {
                   <Label className='form-label fw-semibold mb-1'>
                     Matricule <span className='text-danger'>*</span>
                   </Label>
-                  <Input
-                    value={form.mat}
-                    onChange={(e) => setForm((f) => ({ ...f, mat: e.target.value }))}
-                    placeholder='AD001'
-                  />
+                  <Input disabled={viewing} value={form.mat} onChange={(e) => setForm((f) => ({ ...f, mat: e.target.value }))} placeholder='AD001' />
                 </FormGroup>
               </Col>
             </Row>
@@ -287,6 +276,7 @@ const UtilisateurNonEncadreurList = () => {
             <Row className='g-3'>
               <Col xs='12'>
                 <Combobox
+                  isDisabled={viewing}
                   label='Opérateur (non-encadreur)'
                   options={OPERATEURS_OPT}
                   value={form.operateur}
@@ -298,12 +288,7 @@ const UtilisateurNonEncadreurList = () => {
                 />
               </Col>
               <Col xs='12'>
-                <Combobox
-                  label='Poste'
-                  options={POSTES_PAR_OP[form.operateur.value] ?? []}
-                  value={form.poste}
-                  onChange={(opt) => opt && setForm((f) => ({ ...f, poste: opt }))}
-                />
+                <Combobox isDisabled={viewing} label='Poste' options={POSTES_PAR_OP[form.operateur.value] ?? []} value={form.poste} onChange={(opt) => opt && setForm((f) => ({ ...f, poste: opt }))} />
               </Col>
             </Row>
 
@@ -317,27 +302,18 @@ const UtilisateurNonEncadreurList = () => {
               <Col xs='7'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Email</Label>
-                  <Input
-                    type='email'
-                    value={form.email}
-                    onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                    placeholder='user@firca.ci'
-                  />
+                  <Input disabled={viewing} type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='user@firca.ci' />
                 </FormGroup>
               </Col>
               <Col xs='5'>
                 <FormGroup className='mb-0'>
                   <Label className='form-label fw-semibold mb-1'>Téléphone</Label>
-                  <Input
-                    value={form.tel}
-                    onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))}
-                    placeholder='+225 XX XX XX XX'
-                  />
+                  <Input disabled={viewing} value={form.tel} onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))} placeholder='+225 XX XX XX XX' />
                 </FormGroup>
               </Col>
             </Row>
 
-            {!editing && (
+            {!editing && !viewing && (
               <>
                 <hr className='my-3' style={{ borderColor: 'transparent' }} />
 
@@ -349,12 +325,7 @@ const UtilisateurNonEncadreurList = () => {
                   <Label className='form-label fw-semibold mb-1'>
                     Mot de passe <span className='text-danger'>*</span>
                   </Label>
-                  <Input
-                    type='password'
-                    value={form.mdp}
-                    onChange={(e) => setForm((f) => ({ ...f, mdp: e.target.value }))}
-                    placeholder='••••••••'
-                  />
+                  <Input type='password' value={form.mdp} onChange={(e) => setForm((f) => ({ ...f, mdp: e.target.value }))} placeholder='••••••••' />
                 </FormGroup>
               </>
             )}
@@ -362,12 +333,7 @@ const UtilisateurNonEncadreurList = () => {
             <hr className='my-3' style={{ borderColor: 'transparent' }} />
 
             <FormGroup check className='mb-0'>
-              <Input
-                type='checkbox'
-                id='actif-check'
-                checked={form.actif}
-                onChange={(e) => setForm((f) => ({ ...f, actif: e.target.checked }))}
-              />
+              <Input disabled={viewing} type='checkbox' id='actif-check' checked={form.actif} onChange={(e) => setForm((f) => ({ ...f, actif: e.target.checked }))} />
               <Label check htmlFor='actif-check' className='fw-semibold'>Compte actif</Label>
             </FormGroup>
 
