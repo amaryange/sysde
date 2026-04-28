@@ -4,34 +4,32 @@ import { useHeaderStore } from '@/Store/useHeaderStore';
 import UtilisateurList from './Utilisateur/UtilisateurList';
 import CollaborateurList from './Collaborateur/CollaborateurList';
 
+const TABS = [
+  { id: 'utilisateur',   label: 'Utilisateur'       },
+  { id: 'collaborateur', label: 'Chef de département' },
+];
+
 const TachesContainer = () => {
   const [activeTab, setActiveTab] = useState('utilisateur');
   const isDark = useHeaderStore((s) => s.logoToggle);
 
   return (
-    <Container fluid>
-      <div className='d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4'>
-        <h4 className='mb-0'>Tâches</h4>
-        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
-          <Nav className='border-tab nav-secondary flex-nowrap' tabs>
-            <NavItem style={{ whiteSpace: 'nowrap' }}>
-              <NavLink
-                className={activeTab === 'utilisateur' ? 'active' : ''}
-                onClick={() => setActiveTab('utilisateur')}
-                style={{ cursor: 'pointer', color: activeTab === 'utilisateur' ? undefined : isDark ? '#9ca3af' : undefined }}
-              >
-                Utilisateur
-              </NavLink>
-            </NavItem>
-            <NavItem style={{ whiteSpace: 'nowrap' }}>
-              <NavLink
-                className={activeTab === 'collaborateur' ? 'active' : ''}
-                onClick={() => setActiveTab('collaborateur')}
-                style={{ cursor: 'pointer', color: activeTab === 'collaborateur' ? undefined : isDark ? '#9ca3af' : undefined }}
-              >
-                {"Chef de département"}
-              </NavLink>
-            </NavItem>
+    <Container fluid className='p-4'>
+      <div className='mb-4'>
+        <h4 className='mb-3'>Tâches</h4>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <Nav className='border-tab nav-secondary flex-nowrap' tabs style={{ minWidth: 'max-content' }}>
+            {TABS.map((t) => (
+              <NavItem key={t.id}>
+                <NavLink
+                  className={activeTab === t.id ? 'active' : ''}
+                  onClick={() => setActiveTab(t.id)}
+                  style={{ cursor: 'pointer', whiteSpace: 'nowrap', color: activeTab === t.id ? undefined : isDark ? '#9ca3af' : undefined }}
+                >
+                  {t.label}
+                </NavLink>
+              </NavItem>
+            ))}
           </Nav>
         </div>
       </div>

@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
 import ConfirmDelete from '@/Component/Common/ConfirmDelete';
-import { UserPlus, Eye, Edit2, Trash2 } from 'react-feather';
+import RowActions from '@/Component/Common/RowActions';
+import { UserPlus } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -190,12 +191,7 @@ const ChefDepartementList = () => {
                     <td className='text-muted'>{u.tel}</td>
                     <td><Badge color={u.actif ? 'success' : 'secondary'} className='badge-light'>{u.actif ? 'Actif' : 'Inactif'}</Badge></td>
                     <td className='text-end'>
-                      <Button id={`cd-view-${u.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openView(u)}><Eye size={14} /></Button>
-                      <UncontrolledTooltip target={`cd-view-${u.id}`}>Consulter</UncontrolledTooltip>
-                      <Button id={`cd-edit-${u.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(u)}><Edit2 size={14} /></Button>
-                      <UncontrolledTooltip target={`cd-edit-${u.id}`}>Modifier</UncontrolledTooltip>
-                      <Button id={`cd-del-${u.id}`} color='light' size='sm' className='p-1' onClick={() => setDeleteTarget(u)}><Trash2 size={14} className='text-danger' /></Button>
-                      <UncontrolledTooltip target={`cd-del-${u.id}`}>Supprimer</UncontrolledTooltip>
+                      <RowActions prefix='cd' id={u.id} onView={() => openView(u)} onEdit={() => openEdit(u)} onDelete={() => setDeleteTarget(u)} />
                     </td>
                   </tr>
                 ))}

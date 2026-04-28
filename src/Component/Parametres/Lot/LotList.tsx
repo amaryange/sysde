@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
+import { Card, CardBody, Table, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
 import ConfirmDelete from '@/Component/Common/ConfirmDelete';
-import { PlusCircle, Eye, Edit2, Trash2 } from 'react-feather';
+import RowActions from '@/Component/Common/RowActions';
+import { PlusCircle } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -154,14 +155,7 @@ const LotList = () => {
                     <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.couverture}</td>
                     <td className='text-muted'>{l.secteur}</td>
                     <td className='text-muted'>{l.departement}</td>
-                    <td className='text-end'>
-                      <Button id={`lt-view-${l.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openView(l)}><Eye size={14} /></Button>
-                      <UncontrolledTooltip target={`lt-view-${l.id}`}>Consulter</UncontrolledTooltip>
-                      <Button id={`lt-edit-${l.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(l)}><Edit2 size={14} /></Button>
-                      <UncontrolledTooltip target={`lt-edit-${l.id}`}>Modifier</UncontrolledTooltip>
-                      <Button id={`lt-del-${l.id}`} color='light' size='sm' className='p-1' onClick={() => setDeleteTarget(l)}><Trash2 size={14} className='text-danger' /></Button>
-                      <UncontrolledTooltip target={`lt-del-${l.id}`}>Supprimer</UncontrolledTooltip>
-                    </td>
+                    <td><RowActions prefix='lt' id={l.id} onView={() => openView(l)} onEdit={() => openEdit(l)} onDelete={() => setDeleteTarget(l)} /></td>
                   </tr>
                 ))}
               </tbody>

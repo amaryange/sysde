@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
 import ConfirmDelete from '@/Component/Common/ConfirmDelete';
-import { PlusCircle, Eye, Edit2, Trash2 } from 'react-feather';
+import RowActions from '@/Component/Common/RowActions';
+import { PlusCircle } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -151,14 +152,7 @@ const ContratList = () => {
                     <td className='text-muted'>{c.fin}</td>
                     <td>{fmtMontant(c.montant)}</td>
                     <td><Badge color={c.statut ? 'success' : 'secondary'} className='badge-light'>{c.statut ? 'Actif' : 'Clôturé'}</Badge></td>
-                    <td className='text-end'>
-                      <Button id={`ct-view-${c.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openView(c)}><Eye size={14} /></Button>
-                      <UncontrolledTooltip target={`ct-view-${c.id}`}>Consulter</UncontrolledTooltip>
-                      <Button id={`ct-edit-${c.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(c)}><Edit2 size={14} /></Button>
-                      <UncontrolledTooltip target={`ct-edit-${c.id}`}>Modifier</UncontrolledTooltip>
-                      <Button id={`ct-del-${c.id}`} color='light' size='sm' className='p-1' onClick={() => setDeleteTarget(c)}><Trash2 size={14} className='text-danger' /></Button>
-                      <UncontrolledTooltip target={`ct-del-${c.id}`}>Supprimer</UncontrolledTooltip>
-                    </td>
+                    <td><RowActions prefix='ct' id={c.id} onView={() => openView(c)} onEdit={() => openEdit(c)} onDelete={() => setDeleteTarget(c)} /></td>
                   </tr>
                 ))}
               </tbody>

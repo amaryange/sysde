@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col, UncontrolledTooltip } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import AppDrawer from '@/Component/Common/AppDrawer';
 import ConfirmDelete from '@/Component/Common/ConfirmDelete';
-import { UserPlus, Eye, Edit2, Trash2 } from 'react-feather';
+import RowActions from '@/Component/Common/RowActions';
+import { UserPlus } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -146,14 +147,7 @@ const OperateurList = () => {
                     <td className='text-muted' style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.email}</td>
                     <td className='text-muted'>{o.tel}</td>
                     <td><Badge color={o.encadreur ? 'success' : 'secondary'} className='badge-light'>{o.encadreur ? 'Oui' : 'Non'}</Badge></td>
-                    <td className='text-end'>
-                      <Button id={`op-view-${o.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openView(o)}><Eye size={14} /></Button>
-                      <UncontrolledTooltip target={`op-view-${o.id}`}>Consulter</UncontrolledTooltip>
-                      <Button id={`op-edit-${o.id}`} color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(o)}><Edit2 size={14} /></Button>
-                      <UncontrolledTooltip target={`op-edit-${o.id}`}>Modifier</UncontrolledTooltip>
-                      <Button id={`op-del-${o.id}`} color='light' size='sm' className='p-1' onClick={() => setDeleteTarget(o)}><Trash2 size={14} className='text-danger' /></Button>
-                      <UncontrolledTooltip target={`op-del-${o.id}`}>Supprimer</UncontrolledTooltip>
-                    </td>
+                    <td><RowActions prefix='op' id={o.id} onView={() => openView(o)} onEdit={() => openEdit(o)} onDelete={() => setDeleteTarget(o)} /></td>
                   </tr>
                 ))}
               </tbody>

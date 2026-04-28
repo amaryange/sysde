@@ -14,8 +14,8 @@ const DEFAULT_USERS: Record<string, { password: string; name: string; role: stri
 
 const LoginTab = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [email,        setEmail       ] = useState('Test123@gmail.com');
-  const [password,     setPassword    ] = useState('Test@123');
+  const [email,        setEmail       ] = useState('admin@apromac.ci');
+  const [password,     setPassword    ] = useState('Apromac@2024');
   const [loading,      setLoading     ] = useState(false);
   const router = useRouter();
   const login  = useAuthStore((s) => s.login);

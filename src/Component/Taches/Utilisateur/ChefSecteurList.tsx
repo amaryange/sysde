@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardBody, Table, Badge, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
-import { UserPlus, Edit2, Trash2, Search } from 'react-feather';
+import RowActions from '@/Component/Common/RowActions';
+import { UserPlus, Search } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -214,14 +215,7 @@ const ChefSecteurList = () => {
                         {c.statut ? 'Actif' : 'Inactif'}
                       </Badge>
                     </td>
-                    <td className='text-end'>
-                      <Button color='light' size='sm' className='me-1 p-1' onClick={() => openEdit(c)}>
-                        <Edit2 size={14} />
-                      </Button>
-                      <Button color='light' size='sm' className='p-1' onClick={() => handleDelete(c.id)}>
-                        <Trash2 size={14} className='text-danger' />
-                      </Button>
-                    </td>
+                    <td><RowActions prefix='cs' id={c.id} onEdit={() => openEdit(c)} onDelete={() => handleDelete(c.id)} /></td>
                   </tr>
                 ))}
               </tbody>
