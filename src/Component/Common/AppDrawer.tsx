@@ -126,7 +126,7 @@ const AppDrawer = ({
         boxShadow: '-4px 0 24px rgba(0,0,0,0.12)',
       };
 
-  const dragHandle: React.HTMLAttributes<HTMLElement> & React.RefAttributes<HTMLElement> = {
+  const dragHandle = {
     onPointerDown : onDragStart,
     onPointerMove : onDragMove,
     onPointerUp   : onDragEnd,
@@ -159,6 +159,39 @@ const AppDrawer = ({
 
       {/* Panel */}
       <div style={panelStyle}>
+
+        {/* Grip handle (desktop) — dépasse du bord gauche, miroir de la pill mobile */}
+        {!isMobile && (
+          <div
+            {...dragHandle}
+            style={{
+              position: 'absolute',
+              left: -20,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: 20,
+              height: 56,
+              backgroundColor: '#fff',
+              borderRadius: '8px 0 0 8px',
+              boxShadow: '-2px 2px 8px rgba(0,0,0,0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: isDragging ? 'grabbing' : 'grab',
+              touchAction: 'none',
+              userSelect: 'none',
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  style={{ width: 3, height: 3, borderRadius: '50%', backgroundColor: '#9ca3af' }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Pill (mobile) — zone de drag principale */}
         {isMobile && (

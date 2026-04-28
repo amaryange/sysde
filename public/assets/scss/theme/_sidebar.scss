@@ -833,6 +833,47 @@
           }
         }
       }
+      // Indicateur visuel de coulissement — tab collé sur le bord droit du sidebar
+      .sidebar-toggle-tab {
+        position: fixed;
+        left: 290px;
+        top: 50vh;
+        transform: translateY(-50%);
+        z-index: 9;
+        width: 20px;
+        height: 52px;
+        background: $white;
+        border: 1px solid $light-gray;
+        border-left: none;
+        border-radius: 0 8px 8px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 0;
+        transition: left 0.3s ease, box-shadow 0.2s;
+        box-shadow: 2px 0 6px rgba(0, 0, 0, 0.07);
+
+        &:hover {
+          box-shadow: 3px 0 12px rgba(0, 0, 0, 0.15);
+          background: $light-background;
+        }
+
+        svg {
+          color: $theme-body-font-color;
+          transition: transform 0.3s ease;
+        }
+      }
+
+      // Quand le sidebar est fermé, le tab se déplace à gauche et la flèche s'inverse
+      header.main-nav.close_icon ~ .sidebar-toggle-tab {
+        left: 0;
+
+        svg {
+          transform: rotate(180deg);
+        }
+      }
+
       .page-body {
         padding-top: 30px;
         margin-left: 290px;

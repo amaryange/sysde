@@ -2343,6 +2343,9 @@
   }
 }
 @media screen and (max-width: 991px) {
+  .sidebar-toggle-tab {
+    display: none !important;
+  }
   .setting-primary,
   .setting-secondary,
   .setting-white {
