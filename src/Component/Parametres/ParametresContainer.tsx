@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { Container, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 import { useHeaderStore } from '@/Store/useHeaderStore';
+import { useTabStore }    from '@/Store/useTabStore';
 import OperateurList from './Operateur/OperateurList';
 import PosteList     from './Poste/PosteList';
 import ContratList   from './Contrat/ContratList';
@@ -19,8 +19,9 @@ const TABS = [
 ];
 
 const ParametresContainer = () => {
-  const [activeTab, setActiveTab] = useState('operateur');
-  const isDark = useHeaderStore((s) => s.logoToggle);
+  const activeTab    = useTabStore((s) => s.parametresTab);
+  const setActiveTab = useTabStore((s) => s.setParametresTab);
+  const isDark       = useHeaderStore((s) => s.logoToggle);
 
   return (
     <Container fluid className='p-4'>

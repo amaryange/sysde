@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Container, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 import { useHeaderStore } from '@/Store/useHeaderStore';
-import UtilisateurList from './Utilisateur/UtilisateurList';
+import { useTabStore }    from '@/Store/useTabStore';
+import UtilisateurList   from './Utilisateur/UtilisateurList';
 import CollaborateurList from './Collaborateur/CollaborateurList';
 
 const TABS = [
@@ -10,8 +11,9 @@ const TABS = [
 ];
 
 const TachesContainer = () => {
-  const [activeTab, setActiveTab] = useState('utilisateur');
-  const isDark = useHeaderStore((s) => s.logoToggle);
+  const activeTab    = useTabStore((s) => s.tachesTab);
+  const setActiveTab = useTabStore((s) => s.setTachesTab);
+  const isDark       = useHeaderStore((s) => s.logoToggle);
 
   return (
     <Container fluid className='p-4'>
