@@ -3,14 +3,17 @@ import { Container, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstra
 import { useHeaderStore } from '@/Store/useHeaderStore';
 import { useTabStore }    from '@/Store/useTabStore';
 import UtilisateurList   from './Utilisateur/UtilisateurList';
+import ChefSecteurList  from './Utilisateur/ChefSecteurList';
 import CollaborateurList from './Collaborateur/CollaborateurList';
 
-const TABS = [
-  { id: 'utilisateur',   label: 'Utilisateur'       },
+const ALL_TABS = [
+  { id: 'utilisateur',   label: 'Utilisateur'        },
+  { id: 'chef_secteur',  label: 'Chef Secteur'        },
   { id: 'collaborateur', label: 'Chef de département' },
 ];
 
-const TachesContainer = () => {
+const TachesContainer = ({ allowedTabs }: { allowedTabs?: string[] }) => {
+  const TABS = allowedTabs ? ALL_TABS.filter((t) => allowedTabs.includes(t.id)) : ALL_TABS;
   const activeTab    = useTabStore((s) => s.tachesTab);
   const setActiveTab = useTabStore((s) => s.setTachesTab);
   const isDark       = useHeaderStore((s) => s.logoToggle);
@@ -39,6 +42,9 @@ const TachesContainer = () => {
       <TabContent activeTab={activeTab}>
         <TabPane tabId='utilisateur'>
           <UtilisateurList />
+        </TabPane>
+        <TabPane tabId='chef_secteur'>
+          <ChefSecteurList />
         </TabPane>
         <TabPane tabId='collaborateur'>
           <CollaborateurList />

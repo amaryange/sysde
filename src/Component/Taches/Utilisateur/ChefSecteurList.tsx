@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Card, CardBody, Table, Badge, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import { Card, CardBody, Table, Badge, Button, Form, FormGroup, Label, Input } from 'reactstrap';
 import RowActions from '@/Component/Common/RowActions';
-import { UserPlus, Search } from 'react-feather';
+import AppDrawer from '@/Component/Common/AppDrawer';
+import ConfirmDelete from '@/Component/Common/ConfirmDelete';
+import { UserPlus } from 'react-feather';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
@@ -20,105 +22,74 @@ const INITIAL_DATA: ChefSecteur[] = [
 ];
 
 const PAGE_SIZE = 5;
-const SECTEURS = ['Abengourou', 'Bondoukou', 'Agnibilékrou', 'Tanda', 'Daoukro'];
+
+const SECTEURS        = ['Abengourou', 'Bondoukou', 'Agnibilékrou', 'Tanda', 'Daoukro'];
 const SECTEUR_OPTIONS: ComboboxOption[] = SECTEURS.map((s) => ({ value: s, label: s }));
-const SECTEUR_FILTER_OPTIONS: ComboboxOption[] = [{ value: 'Tous', label: 'Tous' }, ...SECTEUR_OPTIONS];
-const STATUT_FILTER_OPTIONS: ComboboxOption[]  = [
-  { value: 'Tous',    label: 'Tous'    },
+const SECTEUR_FILTER:  ComboboxOption[] = [{ value: '', label: 'Tous' }, ...SECTEUR_OPTIONS];
+const STATUT_FILTER:   ComboboxOption[] = [
+  { value: '',        label: 'Tous'    },
   { value: 'Actif',   label: 'Actif'   },
   { value: 'Inactif', label: 'Inactif' },
 ];
 
-const emptyForm = () => ({
-  nom:     '',
-  secteur: SECTEUR_OPTIONS[0],
-  tel:     '',
-  lots:    0,
-});
+const emptyForm = () => ({ nom: '', secteur: SECTEUR_OPTIONS[0], tel: '', lots: 0 });
+
+const colStyle:   React.CSSProperties = { padding: '4px 8px' };
+const inputStyle: React.CSSProperties = { fontSize: 12, padding: '3px 6px', height: 28 };
 
 const ChefSecteurList = () => {
   const router       = useRouter();
   const pathname     = usePathname();
   const searchParams = useSearchParams();
 
-  const [data,    setData   ] = useState<ChefSecteur[]>(INITIAL_DATA);
-  const [modal,   setModal  ] = useState(false);
-  const [editing, setEditing] = useState<ChefSecteur | null>(null);
-  const [form,    setForm   ] = useState(emptyForm);
+  const [data,         setData        ] = useState<ChefSecteur[]>(INITIAL_DATA);
+  const [modal,        setModal       ] = useState(false);
+  const [viewing,      setViewing     ] = useState(false);
+  const [editing,      setEditing     ] = useState<ChefSecteur | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ChefSecteur | null>(null);
+  const [form,         setForm        ] = useState(emptyForm);
 
-  const [search,  setSearch ] = useState(() => searchParams.get('chef_q') ?? '');
-  const [secteur, setSecteur] = useState(() => searchParams.get('chef_secteur') ?? 'Tous');
-  const [statut,  setStatut ] = useState(() => searchParams.get('chef_statut') ?? 'Tous');
-  const [page,    setPage   ] = useState(() => Number(searchParams.get('chef_page') ?? '1'));
+  const [fNom,    setFNom    ] = useState(() => searchParams.get('cs_nom') ?? '');
+  const [fSecteur,setFSecteur] = useState(() => searchParams.get('cs_sec') ?? '');
+  const [fTel,    setFTel    ] = useState(() => searchParams.get('cs_tel') ?? '');
+  const [fStatut, setFStatut ] = useState(() => searchParams.get('cs_sta') ?? '');
+  const [page,    setPage    ] = useState(() => Number(searchParams.get('cs_page') ?? '1'));
 
   const pushUrl = (overrides: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
-    Object.entries(overrides).forEach(([k, v]) => {
-      if (v === null || v === '') params.delete(k);
-      else params.set(k, v);
-    });
-    const qs = params.toString();
-    router.replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false });
+    Object.entries(overrides).forEach(([k, v]) => { if (!v) params.delete(k); else params.set(k, v); });
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const pushSearchUrl = useDebouncedCallback((val: string) => {
-    pushUrl({ chef_q: val || null, chef_page: null });
-  }, 300);
+  const debNom = useDebouncedCallback((v: string) => pushUrl({ cs_nom: v || null, cs_page: null }), 300);
+  const debTel = useDebouncedCallback((v: string) => pushUrl({ cs_tel: v || null, cs_page: null }), 300);
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setSearch(val);
-    setPage(1);
-    pushSearchUrl(val);
-  };
+  const handleNom    = (v: string) => { setFNom(v);     setPage(1); debNom(v); };
+  const handleTel    = (v: string) => { setFTel(v);     setPage(1); debTel(v); };
+  const handleSecteur= (v: string) => { setFSecteur(v); setPage(1); pushUrl({ cs_sec: v || null, cs_page: null }); };
+  const handleStatut = (v: string) => { setFStatut(v);  setPage(1); pushUrl({ cs_sta: v || null, cs_page: null }); };
+  const handlePage   = (p: number) => { setPage(p); pushUrl({ cs_page: p > 1 ? String(p) : null }); };
 
-  const handleSecteur = (val: string) => {
-    setSecteur(val);
-    setPage(1);
-    pushUrl({ chef_secteur: val === 'Tous' ? null : val, chef_page: null });
-  };
+  const fillForm = (c: ChefSecteur) => ({
+    nom:     c.nom,
+    secteur: SECTEUR_OPTIONS.find((o) => o.value === c.secteur) ?? SECTEUR_OPTIONS[0],
+    tel:     c.tel,
+    lots:    c.lots,
+  });
 
-  const handleStatut = (val: string) => {
-    setStatut(val);
-    setPage(1);
-    pushUrl({ chef_statut: val === 'Tous' ? null : val, chef_page: null });
-  };
+  const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
+  const openView = (c: ChefSecteur) => { setViewing(true);  setEditing(null); setForm(fillForm(c)); setModal(true); };
+  const openEdit = (c: ChefSecteur) => { setViewing(false); setEditing(c);    setForm(fillForm(c)); setModal(true); };
 
-  const handlePage = (p: number) => {
-    setPage(p);
-    pushUrl({ chef_page: p > 1 ? String(p) : null });
-  };
-
-  const openAdd = () => {
-    setEditing(null);
-    setForm(emptyForm());
-    setModal(true);
-  };
-
-  const openEdit = (c: ChefSecteur) => {
-    setEditing(c);
-    setForm({
-      nom:     c.nom,
-      secteur: SECTEUR_OPTIONS.find((o) => o.value === c.secteur) ?? SECTEUR_OPTIONS[0],
-      tel:     c.tel,
-      lots:    c.lots,
-    });
-    setModal(true);
-  };
-
-  const handleDelete = (id: number) => {
-    if (!window.confirm('Supprimer ce chef de secteur ?')) return;
-    setData((prev) => prev.filter((c) => c.id !== id));
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    setData((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+    setDeleteTarget(null);
   };
 
   const handleSave = () => {
     if (!form.nom.trim()) return;
-    const payload: Omit<ChefSecteur, 'id' | 'statut'> = {
-      nom:     form.nom.trim(),
-      secteur: form.secteur.value,
-      tel:     form.tel.trim(),
-      lots:    form.lots,
-    };
+    const payload = { nom: form.nom.trim(), secteur: form.secteur.value, tel: form.tel.trim(), lots: form.lots };
     if (editing) {
       setData((prev) => prev.map((c) => c.id === editing.id ? { ...c, ...payload } : c));
     } else {
@@ -128,14 +99,12 @@ const ChefSecteurList = () => {
     setModal(false);
   };
 
-  const filtered = useMemo(() => {
-    return data.filter((c) => {
-      const matchSearch  = c.nom.toLowerCase().includes(search.toLowerCase()) || c.secteur.toLowerCase().includes(search.toLowerCase());
-      const matchSecteur = secteur === 'Tous' || c.secteur === secteur;
-      const matchStatut  = statut === 'Tous' || (statut === 'Actif' ? c.statut : !c.statut);
-      return matchSearch && matchSecteur && matchStatut;
-    });
-  }, [data, search, secteur, statut]);
+  const filtered = useMemo(() => data.filter((c) => (
+    (!fNom     || c.nom.toLowerCase().includes(fNom.toLowerCase())) &&
+    (!fSecteur || c.secteur === fSecteur) &&
+    (!fTel     || c.tel.toLowerCase().includes(fTel.toLowerCase())) &&
+    (!fStatut  || (fStatut === 'Actif' ? c.statut : !c.statut))
+  )), [data, fNom, fSecteur, fTel, fStatut]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -145,47 +114,9 @@ const ChefSecteurList = () => {
       <div className='d-flex justify-content-between align-items-center mb-3'>
         <h5 className='mb-0'>Liste des chefs secteurs</h5>
         <Button color='primary' className='d-flex align-items-center gap-1' onClick={openAdd}>
-          <UserPlus size={16} />
-          Ajouter chef secteur
+          <UserPlus size={16} /> Ajouter chef secteur
         </Button>
       </div>
-
-      <Row className='mb-3 g-2'>
-        <Col md='5'>
-          <div className='input-group'>
-            <span className='input-group-text bg-transparent'>
-              <Search size={15} className='text-muted' />
-            </span>
-            <Input
-              type='text'
-              placeholder='Rechercher par nom ou secteur…'
-              value={search}
-              onChange={handleSearch}
-            />
-          </div>
-        </Col>
-        <Col md='3'>
-          <Combobox
-            options={SECTEUR_FILTER_OPTIONS}
-            value={SECTEUR_FILTER_OPTIONS.find((o) => o.value === secteur) ?? null}
-            onChange={(opt) => handleSecteur(opt?.value ?? 'Tous')}
-            isClearable={false}
-            placeholder='Secteur'
-          />
-        </Col>
-        <Col md='2'>
-          <Combobox
-            options={STATUT_FILTER_OPTIONS}
-            value={STATUT_FILTER_OPTIONS.find((o) => o.value === statut) ?? null}
-            onChange={(opt) => handleStatut(opt?.value ?? 'Tous')}
-            isClearable={false}
-            placeholder='Statut'
-          />
-        </Col>
-        <Col md='2' className='text-muted d-flex align-items-center'>
-          <small>{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</small>
-        </Col>
-      </Row>
 
       <Card>
         <CardBody className='p-0'>
@@ -200,6 +131,22 @@ const ChefSecteurList = () => {
                   <th>Statut</th>
                   <th className='text-end'>Actions</th>
                 </tr>
+                <tr>
+                  <th style={colStyle}>
+                    <Input bsSize='sm' style={inputStyle} placeholder='Nom…' value={fNom} onChange={(e) => handleNom(e.target.value)} />
+                  </th>
+                  <th style={colStyle}>
+                    <Combobox options={SECTEUR_FILTER} value={SECTEUR_FILTER.find((o) => o.value === fSecteur) ?? SECTEUR_FILTER[0]} onChange={(opt) => handleSecteur(opt?.value ?? '')} isClearable={false} compact />
+                  </th>
+                  <th style={colStyle} />
+                  <th style={colStyle}>
+                    <Input bsSize='sm' style={inputStyle} placeholder='Tél…' value={fTel} onChange={(e) => handleTel(e.target.value)} />
+                  </th>
+                  <th style={colStyle}>
+                    <Combobox options={STATUT_FILTER} value={STATUT_FILTER.find((o) => o.value === fStatut) ?? STATUT_FILTER[0]} onChange={(opt) => handleStatut(opt?.value ?? '')} isClearable={false} compact />
+                  </th>
+                  <th style={colStyle} />
+                </tr>
               </thead>
               <tbody>
                 {paginated.length === 0 ? (
@@ -210,70 +157,66 @@ const ChefSecteurList = () => {
                     <td>{c.secteur}</td>
                     <td>{c.lots}</td>
                     <td className='text-muted'>{c.tel}</td>
+                    <td><Badge color={c.statut ? 'success' : 'secondary'} className='badge-light'>{c.statut ? 'Actif' : 'Inactif'}</Badge></td>
                     <td>
-                      <Badge color={c.statut ? 'success' : 'secondary'} className='badge-light'>
-                        {c.statut ? 'Actif' : 'Inactif'}
-                      </Badge>
+                      <RowActions
+                        prefix='cs'
+                        id={c.id}
+                        onView={() => openView(c)}
+                        onEdit={() => openEdit(c)}
+                        onDelete={() => setDeleteTarget(c)}
+                      />
                     </td>
-                    <td><RowActions prefix='cs' id={c.id} onEdit={() => openEdit(c)} onDelete={() => handleDelete(c.id)} /></td>
                   </tr>
                 ))}
               </tbody>
             </Table>
           </div>
-          <div className='px-3 pb-2'>
+          <div className='px-3 pb-2 d-flex align-items-center justify-content-between'>
+            <small className='text-muted'>{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</small>
             <AppPagination currentPage={page} totalPages={totalPages} onPageChange={handlePage} />
           </div>
         </CardBody>
       </Card>
 
-      <Modal isOpen={modal} toggle={() => setModal(false)}>
-        <ModalHeader toggle={() => setModal(false)}>
-          {editing ? 'Modifier le chef de secteur' : 'Ajouter un chef de secteur'}
-        </ModalHeader>
-        <ModalBody>
-          <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-            <FormGroup>
-              <Label>Nom & Prénom</Label>
-              <Input
-                type='text'
-                placeholder='Ex: Jean DUPONT'
-                value={form.nom}
-                onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))}
-              />
-            </FormGroup>
-            <Combobox
-              label='Secteur assigné'
-              options={SECTEUR_OPTIONS}
-              value={form.secteur}
-              onChange={(opt) => opt && setForm((f) => ({ ...f, secteur: opt }))}
-              placeholder='-- Choisir un secteur --'
-            />
-            <FormGroup>
-              <Label>Téléphone</Label>
-              <Input
-                type='text'
-                placeholder='+225 XX XX XX XX'
-                value={form.tel}
-                onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))}
-              />
-            </FormGroup>
-            <FormGroup>
-              <Label>Lots gérés</Label>
-              <Input
-                type='number'
-                min={0}
-                value={form.lots}
-                onChange={(e) => setForm((f) => ({ ...f, lots: Number(e.target.value) }))}
-              />
-            </FormGroup>
-          </Form>
-        </ModalBody>
-        <ModalFooter>
-          <Button color='primary' onClick={handleSave}>Enregistrer</Button>
-          <Button color='light' onClick={() => setModal(false)}>Annuler</Button>
-        </ModalFooter>
-      </Modal>
+      <AppDrawer
+        isOpen={modal}
+        toggle={() => setModal(false)}
+        title={viewing ? 'Détails du chef de secteur' : editing ? 'Modifier le chef de secteur' : 'Ajouter un chef de secteur'}
+        onSave={viewing ? undefined : handleSave}
+        onCancel={() => setModal(false)}
+        cancelLabel={viewing ? 'Fermer' : 'Annuler'}
+      >
+        <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+          <FormGroup>
+            <Label className='fw-semibold'>Nom & Prénom</Label>
+            <Input disabled={viewing} type='text' placeholder='Ex: Jean DUPONT' value={form.nom} onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))} />
+          </FormGroup>
+          <Combobox
+            isDisabled={viewing}
+            label='Secteur assigné'
+            options={SECTEUR_OPTIONS}
+            value={form.secteur}
+            onChange={(opt) => opt && setForm((f) => ({ ...f, secteur: opt }))}
+            placeholder='-- Choisir un secteur --'
+          />
+          <FormGroup>
+            <Label className='fw-semibold'>Téléphone</Label>
+            <Input disabled={viewing} type='text' placeholder='+225 XX XX XX XX' value={form.tel} onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))} />
+          </FormGroup>
+          <FormGroup>
+            <Label className='fw-semibold'>Lots gérés</Label>
+            <Input disabled={viewing} type='number' min={0} value={form.lots} onChange={(e) => setForm((f) => ({ ...f, lots: Number(e.target.value) }))} />
+          </FormGroup>
+        </Form>
+      </AppDrawer>
+
+      <ConfirmDelete
+        isOpen={!!deleteTarget}
+        message={`Voulez-vous vraiment supprimer "${deleteTarget?.nom}" ? Cette action est irréversible.`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };
