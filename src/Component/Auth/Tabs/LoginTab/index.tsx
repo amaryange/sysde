@@ -7,9 +7,15 @@ import { useAuthStore } from '@/Store/useAuthStore';
 import { toast } from 'react-toastify';
 
 const DEFAULT_USERS: Record<string, { password: string; name: string; role: string; operateur?: string }> = {
-  'Test123@gmail.com': { password: 'Test@123',     name: 'Admin SYSDE',  role: 'admin' },
-  'admin@firca.ci':    { password: 'Firca@2024',   name: 'Admin FIRCA',  role: 'admin', operateur: 'FIRCA'   },
-  'admin@apromac.ci':  { password: 'Apromac@2024', name: 'Admin APROMAC',role: 'admin', operateur: 'APROMAC' },
+  'Test123@gmail.com': { password: 'Test@123',     name: 'Admin SYSDE',        role: 'admin'             },
+  'admin@firca.ci':    { password: 'Firca@2024',   name: 'Admin FIRCA',        role: 'admin',             operateur: 'FIRCA'   },
+  'admin@apromac.ci':  { password: 'Apromac@2024', name: 'Admin APROMAC',      role: 'admin',             operateur: 'APROMAC' },
+  'cd@firca.ci':       { password: 'Cd@2024',      name: 'Chef Département CD', role: 'chef_departement' },
+};
+
+const ROLE_HOME: Record<string, string> = {
+  admin:             '/dashboard',
+  chef_departement:  '/cd/parametres',
 };
 
 const LoginTab = () => {
@@ -29,7 +35,7 @@ const LoginTab = () => {
     if (stored?.email === email && stored?.password === password) {
       login({ ...stored });
       toast.success('Connexion réussie');
-      router.push('/dashboard');
+      router.push(ROLE_HOME[stored.role] ?? '/dashboard');
       return;
     }
 
@@ -37,7 +43,7 @@ const LoginTab = () => {
     if (found && found.password === password) {
       login({ email, name: found.name, role: found.role, password, operateur: found.operateur });
       toast.success('Connexion réussie');
-      router.push('/dashboard');
+      router.push(ROLE_HOME[found?.role ?? ''] ?? '/dashboard');
     } else {
       toast.error('Identifiants incorrects');
       setLoading(false);
