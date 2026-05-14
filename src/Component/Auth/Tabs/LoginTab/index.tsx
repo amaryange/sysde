@@ -17,7 +17,7 @@ const DEFAULT_USERS: Record<string, { password: string; name: string; role: stri
 
 const ROLE_HOME: Record<string, string> = {
   admin:             '/dashboard',
-  chef_departement:  '/cd/parametres',
+  chef_departement:  '/cd/dashboard',
   chef_secteur:      '/cs/parametres',
   collaborateur:     '/collab/plannings',
 };
