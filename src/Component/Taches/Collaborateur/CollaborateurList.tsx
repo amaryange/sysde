@@ -31,7 +31,7 @@ const INITIAL: Collaborateur[] = [
 
 const PAGE_SIZE = 6;
 
-const ROLE_OPTS:     ComboboxOption[] = MOCK_ROLES.filter((r) => r.encadreur).map((r) => ({ value: r.id, label: `${r.acronyme} — ${r.nom}` }));
+const ROLE_OPTS:     ComboboxOption[] = MOCK_ROLES.filter((r) => r.encadreur && r.slug !== 'chef_secteur').map((r) => ({ value: r.id, label: `${r.acronyme} — ${r.nom}` }));
 const SECTEUR_OPTS:  ComboboxOption[] = MOCK_SECTEURS.map((s) => ({ value: s.id, label: s.lib }));
 const OP_OPTS:       ComboboxOption[] = MOCK_OPERATEURS.filter((o) => o.encadreur).map((o) => ({ value: o.id, label: o.acronyme }));
 
