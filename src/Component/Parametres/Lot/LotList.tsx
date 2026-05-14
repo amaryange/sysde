@@ -11,54 +11,72 @@ import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 import { useLog } from '@/hooks/useLog';
+import { MOCK_LOTS, MOCK_SECTEURS, MockLot } from '@/Data/mockData';
 
-type Lot = { id: number; num: string; cde: string; couverture: string; secteur: string; region: string; departement: string; sprefecture: string };
+// ---------------------------------------------------------------------------
+// Options
+// ---------------------------------------------------------------------------
+const SECTEURS_OPT: ComboboxOption[] = MOCK_SECTEURS.map((s) => ({
+  value: s.id,
+  label: `${s.cde} — ${s.lib}`,
+}));
 
-const SECTEURS_OPT: ComboboxOption[] = [
-  { value: 'Abengourou',   label: 'Abengourou'   },
-  { value: 'Bondoukou',    label: 'Bondoukou'    },
-  { value: 'Agnibilékrou', label: 'Agnibilékrou' },
-  { value: 'Tanda',        label: 'Tanda'        },
-  { value: 'Daoukro',      label: 'Daoukro'      },
-];
+const SECTEUR_FILTER: ComboboxOption[] = [{ value: '', label: 'Tous' }, ...SECTEURS_OPT];
 
-const SECTEUR_FILTER = [{ value: '', label: 'Tous' }, ...SECTEURS_OPT];
-
-const INITIAL: Lot[] = [
-  { id: 1, num: '1', cde: 'LT-01', couverture: 'Zone Nord Abengourou', secteur: 'Abengourou',   region: 'Indénié-Djuablin', departement: 'Abengourou',   sprefecture: 'Abengourou'   },
-  { id: 2, num: '2', cde: 'LT-02', couverture: 'Zone Sud Abengourou',  secteur: 'Abengourou',   region: 'Indénié-Djuablin', departement: 'Abengourou',   sprefecture: 'Aniassué'     },
-  { id: 3, num: '3', cde: 'LT-03', couverture: 'Zone Est Abengourou',  secteur: 'Abengourou',   region: 'Indénié-Djuablin', departement: 'Abengourou',   sprefecture: 'Ebilassokro'  },
-  { id: 4, num: '4', cde: 'LT-04', couverture: 'Zone Nord Bondoukou',  secteur: 'Bondoukou',    region: 'Zanzan',           departement: 'Bondoukou',    sprefecture: 'Bondoukou'    },
-  { id: 5, num: '5', cde: 'LT-05', couverture: 'Zone Sud Bondoukou',   secteur: 'Bondoukou',    region: 'Zanzan',           departement: 'Bondoukou',    sprefecture: 'Laoudi-Ba'    },
-  { id: 6, num: '6', cde: 'LT-06', couverture: 'Zone Agnibilékrou 1',  secteur: 'Agnibilékrou', region: 'Indénié-Djuablin', departement: 'Agnibilékrou', sprefecture: 'Agnibilékrou' },
-  { id: 7, num: '7', cde: 'LT-07', couverture: 'Zone Tanda Centrale',  secteur: 'Tanda',        region: 'Zanzan',           departement: 'Tanda',        sprefecture: 'Tanda'        },
-  { id: 8, num: '8', cde: 'LT-08', couverture: 'Zone Daoukro Nord',    secteur: 'Daoukro',      region: "N'Zi-Comoé",      departement: 'Daoukro',      sprefecture: 'Daoukro'      },
-];
-
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 const PAGE_SIZE = 6;
-const emptyForm = () => ({ num: '', cde: '', couverture: '', secteur: SECTEURS_OPT[0], region: '', departement: '', sprefecture: '' });
-
 const colStyle: React.CSSProperties   = { padding: '4px 8px' };
 const inputStyle: React.CSSProperties = { fontSize: 12, padding: '3px 6px', height: 28 };
 
+const secteurLabel = (id: string) => MOCK_SECTEURS.find((s) => s.id === id)?.lib ?? id;
+
+type LotForm = {
+  num:         string;
+  cde:         string;
+  couvert:     string;
+  id_secteur:  ComboboxOption;
+  region:      string;
+  departement: string;
+  sprefecture: string;
+};
+
+const emptyForm = (): LotForm => ({
+  num: '', cde: '', couvert: '', id_secteur: SECTEURS_OPT[0], region: '', departement: '', sprefecture: '',
+});
+
+const fillForm = (l: MockLot): LotForm => ({
+  num:         l.num,
+  cde:         l.cde,
+  couvert:     l.couvert,
+  id_secteur:  SECTEURS_OPT.find((s) => s.value === l.id_secteur) ?? SECTEURS_OPT[0],
+  region:      l.region,
+  departement: l.departement,
+  sprefecture: l.sprefecture,
+});
+
+// ---------------------------------------------------------------------------
+// Composant
+// ---------------------------------------------------------------------------
 const LotList = () => {
   const router       = useRouter();
   const pathname     = usePathname();
   const searchParams = useSearchParams();
+  const log          = useLog();
 
-  const log = useLog();
-  const [data,    setData   ] = useState<Lot[]>(INITIAL);
-  const [modal,   setModal  ] = useState(false);
-  const [editing, setEditing] = useState<Lot | null>(null);
+  const [data,         setData        ] = useState<MockLot[]>(MOCK_LOTS);
+  const [modal,        setModal       ] = useState(false);
+  const [editing,      setEditing     ] = useState<MockLot | null>(null);
   const [viewing,      setViewing     ] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Lot | null>(null);
-  const [form,         setForm        ] = useState(emptyForm);
+  const [deleteTarget, setDeleteTarget] = useState<MockLot | null>(null);
+  const [form,         setForm        ] = useState<LotForm>(emptyForm);
 
-  const [fNum,  setFNum  ] = useState(() => searchParams.get('lt_num') ?? '');
-  const [fCde,  setFCde  ] = useState(() => searchParams.get('lt_cde') ?? '');
+  const [fNum,  setFNum  ] = useState(() => searchParams.get('lt_num')  ?? '');
+  const [fCde,  setFCde  ] = useState(() => searchParams.get('lt_cde')  ?? '');
   const [fCouv, setFCouv ] = useState(() => searchParams.get('lt_couv') ?? '');
-  const [fSec,  setFSec  ] = useState(() => searchParams.get('lt_sec') ?? '');
-  const [fDep,  setFDep  ] = useState(() => searchParams.get('lt_dep') ?? '');
+  const [fSec,  setFSec  ] = useState(() => searchParams.get('lt_sec')  ?? '');
+  const [fDep,  setFDep  ] = useState(() => searchParams.get('lt_dep')  ?? '');
   const [page,  setPage  ] = useState(() => Number(searchParams.get('lt_page') ?? '1'));
 
   const pushUrl = (overrides: Record<string, string | null>) => {
@@ -80,25 +98,46 @@ const LotList = () => {
   const handlePage = (p: number) => { setPage(p); pushUrl({ lt_page: p > 1 ? String(p) : null }); };
 
   const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
-  const fillForm = (l: Lot) => ({ num: l.num, cde: l.cde, couverture: l.couverture, region: l.region, departement: l.departement, sprefecture: l.sprefecture, secteur: SECTEURS_OPT.find((s) => s.value === l.secteur) ?? SECTEURS_OPT[0] });
-  const openEdit = (l: Lot) => { setViewing(false); setEditing(l); setForm(fillForm(l)); setModal(true); };
-  const openView = (l: Lot) => { setViewing(true);  setEditing(null); setForm(fillForm(l)); setModal(true); };
+  const openEdit = (l: MockLot) => { setViewing(false); setEditing(l);   setForm(fillForm(l)); setModal(true); };
+  const openView = (l: MockLot) => { setViewing(true);  setEditing(null); setForm(fillForm(l)); setModal(true); };
+
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return;
     setData((p) => p.filter((l) => l.id !== deleteTarget.id));
-    log('DELETE', 'Lot', `Suppression du lot ${deleteTarget.cde} — ${deleteTarget.couverture}`, deleteTarget.cde);
+    log('DELETE', 'Lot', `Suppression du lot ${deleteTarget.cde}`, deleteTarget.cde);
     setDeleteTarget(null);
   };
+
+  // Quand le secteur change, pré-remplit région/dept/spref
+  const handleSecteurChange = (opt: ComboboxOption | null) => {
+    if (!opt) return;
+    const sec = MOCK_SECTEURS.find((s) => s.id === opt.value);
+    setForm((f) => ({
+      ...f,
+      id_secteur:  opt,
+      region:      sec?.region      ?? f.region,
+      departement: sec?.departement ?? f.departement,
+      sprefecture: sec?.sprefecture ?? f.sprefecture,
+    }));
+  };
+
   const handleSave = () => {
     if (!form.num.trim() || !form.cde.trim()) return;
-    const payload = { num: form.num, cde: form.cde, couverture: form.couverture, secteur: form.secteur.value, region: form.region, departement: form.departement, sprefecture: form.sprefecture };
+    const payload: Omit<MockLot, 'id'> = {
+      num:         form.num,
+      cde:         form.cde,
+      couvert:     form.couvert,
+      id_secteur:  form.id_secteur.value,
+      region:      form.region,
+      departement: form.departement,
+      sprefecture: form.sprefecture,
+    };
     if (editing) {
-      setData((p) => p.map((l) => l.id === editing.id ? { ...l, ...payload } : l));
+      setData((p) => p.map((l) => l.id === editing.id ? { id: editing.id, ...payload } : l));
       log('UPDATE', 'Lot', `Modification du lot ${form.cde}`, form.cde);
     } else {
-      const nextId = Math.max(0, ...data.map((l) => l.id)) + 1;
-      setData((p) => [...p, { id: nextId, ...payload }]);
-      log('CREATE', 'Lot', `Création du lot ${form.cde} — ${form.secteur.value}`, form.cde);
+      setData((p) => [...p, { id: `lt-${Date.now()}`, ...payload }]);
+      log('CREATE', 'Lot', `Création du lot ${form.cde} — ${form.id_secteur.label}`, form.cde);
     }
     setModal(false);
   };
@@ -106,8 +145,8 @@ const LotList = () => {
   const filtered = useMemo(() => data.filter((l) => (
     (!fNum  || l.num.includes(fNum)) &&
     (!fCde  || l.cde.toLowerCase().includes(fCde.toLowerCase())) &&
-    (!fCouv || l.couverture.toLowerCase().includes(fCouv.toLowerCase())) &&
-    (!fSec  || l.secteur === fSec) &&
+    (!fCouv || l.couvert.toLowerCase().includes(fCouv.toLowerCase())) &&
+    (!fSec  || l.id_secteur === fSec) &&
     (!fDep  || l.departement.toLowerCase().includes(fDep.toLowerCase()))
   )), [data, fNum, fCde, fCouv, fSec, fDep]);
 
@@ -137,11 +176,11 @@ const LotList = () => {
                   <th style={{ width: '10%' }} className='text-end'>Actions</th>
                 </tr>
                 <tr>
-                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='N°…'      value={fNum}  onChange={(e) => handleNum(e.target.value)}  /></th>
-                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Code…'    value={fCde}  onChange={(e) => handleCde(e.target.value)}  /></th>
-                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Zone…'    value={fCouv} onChange={(e) => handleCouv(e.target.value)} /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='N°…'   value={fNum}  onChange={(e) => handleNum(e.target.value)}  /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Code…' value={fCde}  onChange={(e) => handleCde(e.target.value)}  /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Zone…' value={fCouv} onChange={(e) => handleCouv(e.target.value)} /></th>
                   <th style={colStyle}><Combobox options={SECTEUR_FILTER} value={SECTEUR_FILTER.find((o) => o.value === fSec) ?? SECTEUR_FILTER[0]} onChange={(opt) => handleSec(opt?.value ?? '')} isClearable={false} compact /></th>
-                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Dépt…'    value={fDep}  onChange={(e) => handleDep(e.target.value)}  /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Dépt…' value={fDep}  onChange={(e) => handleDep(e.target.value)}  /></th>
                   <th style={colStyle} />
                 </tr>
               </thead>
@@ -152,8 +191,8 @@ const LotList = () => {
                   <tr key={l.id}>
                     <td className='f-w-600'>Lot {l.num}</td>
                     <td><code>{l.cde}</code></td>
-                    <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.couverture}</td>
-                    <td className='text-muted'>{l.secteur}</td>
+                    <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.couvert}</td>
+                    <td className='text-muted'>{secteurLabel(l.id_secteur)}</td>
                     <td className='text-muted'>{l.departement}</td>
                     <td><RowActions prefix='lt' id={l.id} onView={() => openView(l)} onEdit={() => openEdit(l)} onDelete={() => setDeleteTarget(l)} /></td>
                   </tr>
@@ -169,8 +208,7 @@ const LotList = () => {
       </Card>
 
       <AppDrawer
-        isOpen={modal}
-        toggle={() => setModal(false)}
+        isOpen={modal} toggle={() => setModal(false)}
         title={viewing ? 'Détails du lot' : editing ? 'Modifier le lot' : 'Ajouter un lot'}
         onSave={viewing ? undefined : handleSave}
         onCancel={() => setModal(false)}
@@ -179,21 +217,19 @@ const LotList = () => {
         <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
           <p className='text-muted fw-semibold small mb-2'>Identification</p>
           <Row>
-            <Col xs='12' sm='4'><FormGroup><Label>N° Lot <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.num} onChange={(e) => setForm((f) => ({ ...f, num: e.target.value }))} placeholder='Ex: 1' /></FormGroup></Col>
-            <Col xs='12' sm='4'><FormGroup><Label>Code <span className='text-danger'>*</span></Label>  <Input disabled={viewing} value={form.cde} onChange={(e) => setForm((f) => ({ ...f, cde: e.target.value }))} placeholder='LT-01' /></FormGroup></Col>
-            <Col xs='12' sm='4'><FormGroup><Label>Secteur</Label><Combobox isDisabled={viewing} options={SECTEURS_OPT} value={form.secteur} onChange={(opt) => opt && setForm((f) => ({ ...f, secteur: opt }))} /></FormGroup></Col>
+            <Col xs='12' sm='6'><FormGroup><Label>N° Lot <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.num} onChange={(e) => setForm((f) => ({ ...f, num: e.target.value }))} placeholder='Ex: 1' /></FormGroup></Col>
+            <Col xs='12' sm='6'><FormGroup><Label>Code <span className='text-danger'>*</span></Label>  <Input disabled={viewing} value={form.cde} onChange={(e) => setForm((f) => ({ ...f, cde: e.target.value }))} placeholder='LT-01' /></FormGroup></Col>
           </Row>
-
+          <Combobox label='Secteur' isDisabled={viewing} options={SECTEURS_OPT} value={form.id_secteur} onChange={handleSecteurChange} />
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Zone</p>
-          <FormGroup><Label>Zone de couverture</Label><Input disabled={viewing} value={form.couverture} onChange={(e) => setForm((f) => ({ ...f, couverture: e.target.value }))} placeholder='Ex: Zone Nord Abengourou' /></FormGroup>
-
+          <FormGroup><Label>Zone de couverture</Label><Input disabled={viewing} value={form.couvert} onChange={(e) => setForm((f) => ({ ...f, couvert: e.target.value }))} placeholder='Ex: Zone Nord Abengourou' /></FormGroup>
           <hr style={{ borderColor: 'transparent' }} />
-          <p className='text-muted fw-semibold small mb-2'>Localisation</p>
+          <p className='text-muted fw-semibold small mb-2'>Localisation <span className='text-muted fw-normal'>(pré-remplie depuis le secteur)</span></p>
           <Row>
-            <Col xs='12' sm='4'><FormGroup><Label>Région</Label>         <Input disabled={viewing} value={form.region}      onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}      /></FormGroup></Col>
-            <Col xs='12' sm='4'><FormGroup><Label>Département</Label>    <Input disabled={viewing} value={form.departement} onChange={(e) => setForm((f) => ({ ...f, departement: e.target.value }))} /></FormGroup></Col>
-            <Col xs='12' sm='4'><FormGroup><Label>Sous-préfecture</Label><Input disabled={viewing} value={form.sprefecture} onChange={(e) => setForm((f) => ({ ...f, sprefecture: e.target.value }))} /></FormGroup></Col>
+            <Col xs='12' sm='4'><FormGroup><Label>Région</Label>          <Input disabled={viewing} value={form.region}      onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}      /></FormGroup></Col>
+            <Col xs='12' sm='4'><FormGroup><Label>Département</Label>     <Input disabled={viewing} value={form.departement} onChange={(e) => setForm((f) => ({ ...f, departement: e.target.value }))} /></FormGroup></Col>
+            <Col xs='12' sm='4'><FormGroup><Label>Sous-préfecture</Label> <Input disabled={viewing} value={form.sprefecture} onChange={(e) => setForm((f) => ({ ...f, sprefecture: e.target.value }))} /></FormGroup></Col>
           </Row>
         </Form>
       </AppDrawer>
