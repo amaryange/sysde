@@ -99,7 +99,7 @@ const AppDrawer = ({
     if (isOpen) {
       if (!mountedRef.current) {
         // Première ouverture : monter le DOM.
-        // L'animation est déclenchée par useLayoutEffect + useEffect [mounted].
+        // L'animation est déclenchée par useLayoutEffect [mounted].
         mountedRef.current = true;
         setMounted(true);
       } else {
@@ -117,7 +117,9 @@ const AppDrawer = ({
     return () => clearTimeout(closeTimerRef.current);
   }, [isOpen]);
 
-  // Avant le premier paint : cacher le panel pour éviter le flash de contenu.
+  // Avant le premier paint : cacher le panel, puis déclencher l'animation
+  // via double rAF. Le 1er rAF laisse le navigateur peindre la position
+  // cachée ; le 2e démarre la transition depuis cet état commité.
   useLayoutEffect(() => {
     if (!mounted) return;
     const panel    = panelRef.current;
@@ -126,15 +128,10 @@ const AppDrawer = ({
     panel.style.transition = 'none';
     panel.style.transform  = hiddenTransform();
     if (backdrop) { backdrop.style.transition = 'none'; backdrop.style.opacity = '0'; }
-  }, [mounted]);
-
-  // Après le premier paint : démarrer la transition d'entrée.
-  // useEffect s'exécute après le paint, donc le navigateur a déjà
-  // rendu la position cachée — setDomState peut partir directement.
-  useEffect(() => {
-    if (!mounted) return;
     cancelRafs();
-    rafRef.current.r1 = requestAnimationFrame(() => setDomState(true));
+    rafRef.current.r1 = requestAnimationFrame(() => {
+      rafRef.current.r2 = requestAnimationFrame(() => setDomState(true));
+    });
     return cancelRafs;
   }, [mounted]);
 
