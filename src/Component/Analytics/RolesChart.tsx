@@ -2,13 +2,17 @@
 
 import Chart from 'react-apexcharts';
 import { Card, CardBody, CardHeader } from 'reactstrap';
-import { repartitionRoles } from '@/Data/analyticsMock';
 import { useHeaderStore } from '@/Store/useHeaderStore';
+import type { RepartitionRole } from '@/Data/analyticsMock';
 
 const PRIMARY   = '#24695c';
 const SECONDARY = '#f0b54d';
 
-const RolesChart = () => {
+interface Props {
+  repartitionRoles: RepartitionRole[];
+}
+
+const RolesChart = ({ repartitionRoles }: Props) => {
   const isDark  = useHeaderStore((s) => s.logoToggle);
   const border  = isDark ? '#374151' : '#f3f4f6';
   const subText = '#9ca3af';

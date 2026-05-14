@@ -2,10 +2,15 @@
 
 import { Card, CardBody, CardHeader } from 'reactstrap';
 import { AlertTriangle, Clock } from 'react-feather';
-import { alertesContrats, alertesSecteurs } from '@/Data/analyticsMock';
 import { useHeaderStore } from '@/Store/useHeaderStore';
+import type { AlerContrat, AlerteSecteur } from '@/Data/analyticsMock';
 
-const AlertesPanel = () => {
+interface Props {
+  alertesContrats:  AlerContrat[];
+  alertesSecteurs:  AlerteSecteur[];
+}
+
+const AlertesPanel = ({ alertesContrats, alertesSecteurs }: Props) => {
   const isDark = useHeaderStore((s) => s.logoToggle);
 
   const border  = isDark ? '#374151' : '#f3f4f6';
@@ -26,55 +31,60 @@ const AlertesPanel = () => {
       </CardHeader>
       <CardBody style={{ padding: '12px 16px', overflowY: 'auto' }}>
 
-        <div style={{ fontSize: 11, fontWeight: 700, color: subText, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>
-          Contrats à renouveler
-        </div>
-        {alertesContrats.map((c) => {
-          const urgent = c.joursRestants <= 30;
-          return (
-            <div key={c.num} style={{
-              background: urgent ? urgentBg : warnBg,
-              border: `1px solid ${urgent ? urgentBorder : warnBorder}`,
-              borderRadius: 8,
-              padding: '10px 12px',
-              marginBottom: 8,
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 10,
-            }}>
-              <Clock size={14} style={{ color: urgent ? '#dc2626' : '#d97706', flexShrink: 0, marginTop: 2 }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: 12, color: text }}>{c.num}</div>
-                <div style={{ fontSize: 11, color: textSub }}>{c.operateur} — {c.montant} FCFA</div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: urgent ? '#dc2626' : '#d97706', marginTop: 2 }}>
-                  Expire dans {c.joursRestants} jours ({c.fin})
+        {alertesContrats.length > 0 && (
+          <>
+            <div style={{ fontSize: 11, fontWeight: 700, color: subText, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>
+              Contrats à renouveler
+            </div>
+            {alertesContrats.map((c) => {
+              const urgent = c.joursRestants <= 60;
+              return (
+                <div key={c.num} style={{
+                  background: urgent ? urgentBg : warnBg,
+                  border: `1px solid ${urgent ? urgentBorder : warnBorder}`,
+                  borderRadius: 8, padding: '10px 12px', marginBottom: 8,
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                }}>
+                  <Clock size={14} style={{ color: urgent ? '#dc2626' : '#d97706', flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 12, color: text }}>{c.num}</div>
+                    <div style={{ fontSize: 11, color: textSub }}>{c.operateur} — {c.montant} FCFA</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: urgent ? '#dc2626' : '#d97706', marginTop: 2 }}>
+                      Expire dans {c.joursRestants} jours ({c.fin})
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
+
+        {alertesSecteurs.length > 0 && (
+          <>
+            <div style={{ fontSize: 11, fontWeight: 700, color: subText, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '16px 0 8px' }}>
+              Zones à risque
+            </div>
+            {alertesSecteurs.map((a) => (
+              <div key={a.secteur} style={{
+                background: a.gravite === 'critique' ? urgentBg : warnBg,
+                border: `1px solid ${a.gravite === 'critique' ? urgentBorder : warnBorder}`,
+                borderRadius: 8, padding: '10px 12px', marginBottom: 8,
+                display: 'flex', gap: 10, alignItems: 'flex-start',
+              }}>
+                <AlertTriangle size={14} style={{ color: a.gravite === 'critique' ? '#dc2626' : '#d97706', flexShrink: 0, marginTop: 2 }} />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 12, color: text }}>{a.secteur}</div>
+                  <div style={{ fontSize: 11, color: textSub }}>{a.probleme}</div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            ))}
+          </>
+        )}
 
-        <div style={{ fontSize: 11, fontWeight: 700, color: subText, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '16px 0 8px' }}>
-          Zones à risque
-        </div>
-        {alertesSecteurs.map((a) => (
-          <div key={a.secteur} style={{
-            background: a.gravite === 'critique' ? urgentBg : warnBg,
-            border: `1px solid ${a.gravite === 'critique' ? urgentBorder : warnBorder}`,
-            borderRadius: 8,
-            padding: '10px 12px',
-            marginBottom: 8,
-            display: 'flex',
-            gap: 10,
-            alignItems: 'flex-start',
-          }}>
-            <AlertTriangle size={14} style={{ color: a.gravite === 'critique' ? '#dc2626' : '#d97706', flexShrink: 0, marginTop: 2 }} />
-            <div>
-              <div style={{ fontWeight: 600, fontSize: 12, color: text }}>{a.secteur}</div>
-              <div style={{ fontSize: 11, color: textSub }}>{a.probleme}</div>
-            </div>
-          </div>
-        ))}
+        {alertesContrats.length === 0 && alertesSecteurs.length === 0 && (
+          <p style={{ color: subText, fontSize: 13, textAlign: 'center', marginTop: 16 }}>Aucune alerte</p>
+        )}
+
       </CardBody>
     </Card>
   );

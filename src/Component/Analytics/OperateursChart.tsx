@@ -2,10 +2,14 @@
 
 import Chart from 'react-apexcharts';
 import { Card, CardBody, CardHeader } from 'reactstrap';
-import { performanceOperateurs } from '@/Data/analyticsMock';
 import { useHeaderStore } from '@/Store/useHeaderStore';
+import type { PerformanceOperateur } from '@/Data/analyticsMock';
 
-const OperateursChart = () => {
+interface Props {
+  performanceOperateurs: PerformanceOperateur[];
+}
+
+const OperateursChart = ({ performanceOperateurs }: Props) => {
   const isDark  = useHeaderStore((s) => s.logoToggle);
   const border  = isDark ? '#374151' : '#f3f4f6';
   const subText = '#9ca3af';
@@ -25,12 +29,7 @@ const OperateursChart = () => {
             chart: { type: 'bar', toolbar: { show: false }, background: 'transparent' },
             theme: { mode: isDark ? 'dark' : 'light' },
             plotOptions: {
-              bar: {
-                horizontal: true,
-                borderRadius: 6,
-                barHeight: '55%',
-                distributed: true,
-              },
+              bar: { horizontal: true, borderRadius: 6, barHeight: '55%', distributed: true },
             },
             dataLabels: {
               enabled: true,

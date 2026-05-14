@@ -2,13 +2,16 @@
 
 import Chart from 'react-apexcharts';
 import { Card, CardBody, CardHeader } from 'reactstrap';
-import { kpiData } from '@/Data/analyticsMock';
 import { useHeaderStore } from '@/Store/useHeaderStore';
 
 const PRIMARY = '#24695c';
 
-const DeploiementChart = () => {
-  const isDark = useHeaderStore((s) => s.logoToggle);
+interface Props {
+  kpiData: { tauxDeploiement: number; postesPouvus: number; postesTotal: number };
+}
+
+const DeploiementChart = ({ kpiData }: Props) => {
+  const isDark  = useHeaderStore((s) => s.logoToggle);
   const border  = isDark ? '#374151' : '#f3f4f6';
   const subText = '#9ca3af';
 

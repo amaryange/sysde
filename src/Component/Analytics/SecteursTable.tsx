@@ -1,8 +1,8 @@
 'use client';
 
 import { Card, CardBody, CardHeader } from 'reactstrap';
-import { deploiementParSecteur } from '@/Data/analyticsMock';
 import { useHeaderStore } from '@/Store/useHeaderStore';
+import type { DeploiementSecteur } from '@/Data/analyticsMock';
 
 const TauxBar = ({ value }: { value: number }) => {
   const color = value >= 80 ? '#16a34a' : value >= 60 ? '#d97706' : '#dc2626';
@@ -17,21 +17,25 @@ const TauxBar = ({ value }: { value: number }) => {
   );
 };
 
-const SecteursTable = () => {
+interface Props {
+  deploiementParSecteur: DeploiementSecteur[];
+}
+
+const SecteursTable = ({ deploiementParSecteur }: Props) => {
   const isDark = useHeaderStore((s) => s.logoToggle);
 
-  const border   = isDark ? '#374151'              : '#f3f4f6';
+  const border   = isDark ? '#374151'               : '#f3f4f6';
   const subText  = '#9ca3af';
-  const text     = isDark ? '#f3f4f6'              : '#111';
-  const textSub  = isDark ? '#9ca3af'              : '#6b7280';
-  const textBody = isDark ? '#d1d5db'              : '#374151';
+  const text     = isDark ? '#f3f4f6'               : '#111';
+  const textSub  = isDark ? '#9ca3af'               : '#6b7280';
+  const textBody = isDark ? '#d1d5db'               : '#374151';
   const bgHead   = isDark ? 'rgba(255,255,255,0.05)' : '#f9fafb';
   const bgAlt    = isDark ? 'rgba(255,255,255,0.02)' : '#fafafa';
 
   const vacantUrgentBg   = isDark ? 'rgba(220,38,38,0.15)' : '#fee2e2';
   const vacantUrgentText = '#dc2626';
   const vacantWarnBg     = isDark ? 'rgba(146,64,14,0.15)'  : '#fef9c3';
-  const vacantWarnText   = isDark ? '#fbbf24'               : '#92400e';
+  const vacantWarnText   = isDark ? '#fbbf24'                : '#92400e';
 
   return (
     <Card>

@@ -12,24 +12,22 @@ import {
   useMap,
 } from 'react-leaflet';
 import type { GeoJSON as GeoJSONLayer } from 'leaflet';
-import type { Feature, Polygon } from 'geojson';
+import type { Feature } from 'geojson';
 import {
-  secteursGeoJSON,
-  lotsGeoJSON,
-  postes,
   roleColors,
   roleLabels,
   type MockPoste,
   type SecteurProperties,
   type LotProperties,
 } from '@/Data/carteMock';
+import type { FeatureCollection, Polygon } from 'geojson';
 
 // ─── Recenter helper ──────────────────────────────────────────────────────────
 
 const MapCenter = () => {
   const map = useMap();
   useEffect(() => {
-    map.setView([6.90, -5.00], 8);
+    map.setView([6.80, -3.80], 7);
   }, [map]);
   return null;
 };
@@ -132,15 +130,16 @@ const InfoPanel = ({ poste, onClose }: InfoPanelProps) => {
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 interface CarteMapProps {
-  exerciceId: number;
+  exerciceId: string;
+  filteredPostes: MockPoste[];
+  secteursGeoJSON: FeatureCollection<Polygon, SecteurProperties>;
+  lotsGeoJSON: FeatureCollection<Polygon, LotProperties>;
 }
 
-const CarteMap = ({ exerciceId }: CarteMapProps) => {
+const CarteMap = ({ exerciceId, filteredPostes, secteursGeoJSON, lotsGeoJSON }: CarteMapProps) => {
   const [selectedPoste, setSelectedPoste] = useState<MockPoste | null>(null);
   const secteursRef = useRef<GeoJSONLayer | null>(null);
   const lotsRef     = useRef<GeoJSONLayer | null>(null);
-
-  const filteredPostes = postes.filter((p) => p.exerciceId === exerciceId);
 
   const onEachSecteur = (feature: Feature<Polygon, SecteurProperties>, layer: GeoJSONLayer) => {
     const p = feature.properties;
@@ -175,8 +174,8 @@ const CarteMap = ({ exerciceId }: CarteMapProps) => {
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%', minHeight: 500 }}>
       <MapContainer
-        center={[6.90, -5.00]}
-        zoom={8}
+        center={[6.80, -3.80]}
+        zoom={7}
         style={{ height: '100%', width: '100%', minHeight: 500, borderRadius: 8 }}
         scrollWheelZoom
       >
