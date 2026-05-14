@@ -8,7 +8,7 @@ import SidebarMenuDropDown from './SidebarMenuDropDown';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/Store/useAuthStore';
 
-const COLLAB_BASE_ROLES = ['CF', 'CO', 'FS', 'MO', 'collaborateur'];
+const COLLAB_BASE_ROLES = ['CF', 'CO', 'FS', 'MO', 'ES', 'collaborateur'];
 const COLLAB_SU_DI_ROLES = ['SU', 'DI'];
 
 const SidebarMenuList = () => {

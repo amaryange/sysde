@@ -7,19 +7,46 @@ import { useAuthStore } from '@/Store/useAuthStore';
 import { toast } from 'react-toastify';
 
 const DEFAULT_USERS: Record<string, { password: string; name: string; role: string; operateur?: string }> = {
-  'Test123@gmail.com': { password: 'Test@123',     name: 'Admin SYSDE',              role: 'admin'            },
-  'admin@firca.ci':    { password: 'Firca@2024',   name: 'Admin FIRCA',              role: 'admin',            operateur: 'FIRCA'   },
-  'admin@apromac.ci':  { password: 'Apromac@2024', name: 'Admin APROMAC',            role: 'admin',            operateur: 'APROMAC' },
-  'cd@saph.ci':        { password: 'Cd@2024',      name: 'Chef Département',         role: 'chef_departement', operateur: 'SAPH'    },
-  'cs@saph.ci':        { password: 'Cs@2024',      name: 'Chef Secteur',             role: 'chef_secteur',     operateur: 'SAPH'    },
-  'cf@palmci.ci':      { password: 'Cf@2024',      name: 'Contrôleur Formation',     role: 'CF',               operateur: 'PALMCI'  },
-  'co@palmci.ci':      { password: 'Co@2024',      name: 'Contrôleur Ordinaire',     role: 'CO',               operateur: 'PALMCI'  },
-  'fs@sogb.ci':        { password: 'Fs@2024',      name: 'Formateur Saigné',         role: 'FS',               operateur: 'SOGB'    },
-  'mo@sogb.ci':        { password: 'Mo@2024',      name: 'Moniteur',                 role: 'MO',               operateur: 'SOGB'    },
-  'se@saph.ci':        { password: 'Se@2024',      name: 'Secrétaire',               role: 'SE',               operateur: 'SAPH'    },
-  'su@saph.ci':        { password: 'Su@2024',      name: 'Superviseur',              role: 'SU',               operateur: 'SAPH'    },
-  'di@saph.ci':        { password: 'Di@2024',      name: 'Directeur',                role: 'DI',               operateur: 'SAPH'    },
-  'collab@saph.ci':    { password: 'Collab@2024',  name: 'Collaborateur SAPH',       role: 'CF',               operateur: 'SAPH'    },
+  // ── Admins (FIRCA / APROMAC — non-encadreurs, voient tout) ─────────────────
+  'Test123@gmail.com': { password: 'Test@123',     name: 'Super Admin',    role: 'admin'                        },
+  'admin@firca.ci':    { password: 'Firca@2024',   name: 'Admin FIRCA',    role: 'admin',  operateur: 'FIRCA'   },
+  'admin@apromac.ci':  { password: 'Apromac@2024', name: 'Admin APROMAC',  role: 'admin',  operateur: 'APROMAC' },
+
+  // ── SAPH (op-1) ─────────────────────────────────────────────────────────────
+  'cd@saph.ci': { password: 'Cd@2024', name: 'Chef Département SAPH',     role: 'chef_departement', operateur: 'SAPH' },
+  'cs@saph.ci': { password: 'Cs@2024', name: 'Chef Secteur SAPH',         role: 'chef_secteur',     operateur: 'SAPH' },
+  'cf@saph.ci': { password: 'Cf@2024', name: 'Contrôleur Formation SAPH', role: 'CF',               operateur: 'SAPH' },
+  'co@saph.ci': { password: 'Co@2024', name: 'Contrôleur Ordinaire SAPH', role: 'CO',               operateur: 'SAPH' },
+  'fs@saph.ci': { password: 'Fs@2024', name: 'Formateur Saigné SAPH',     role: 'FS',               operateur: 'SAPH' },
+  'mo@saph.ci': { password: 'Mo@2024', name: 'Moniteur SAPH',             role: 'MO',               operateur: 'SAPH' },
+  'es@saph.ci': { password: 'Es@2024', name: 'Équipe Spéciale SAPH',      role: 'ES',               operateur: 'SAPH' },
+  'se@saph.ci': { password: 'Se@2024', name: 'Secrétaire SAPH',           role: 'SE',               operateur: 'SAPH' },
+  'su@saph.ci': { password: 'Su@2024', name: 'Superviseur SAPH',          role: 'SU',               operateur: 'SAPH' },
+  'di@saph.ci': { password: 'Di@2024', name: 'Directeur SAPH',            role: 'DI',               operateur: 'SAPH' },
+
+  // ── PALMCI (op-2) ───────────────────────────────────────────────────────────
+  'cd@palmci.ci': { password: 'Cd@2024', name: 'Chef Département PALMCI',     role: 'chef_departement', operateur: 'PALMCI' },
+  'cs@palmci.ci': { password: 'Cs@2024', name: 'Chef Secteur PALMCI',         role: 'chef_secteur',     operateur: 'PALMCI' },
+  'cf@palmci.ci': { password: 'Cf@2024', name: 'Contrôleur Formation PALMCI', role: 'CF',               operateur: 'PALMCI' },
+  'co@palmci.ci': { password: 'Co@2024', name: 'Contrôleur Ordinaire PALMCI', role: 'CO',               operateur: 'PALMCI' },
+  'fs@palmci.ci': { password: 'Fs@2024', name: 'Formateur Saigné PALMCI',     role: 'FS',               operateur: 'PALMCI' },
+  'mo@palmci.ci': { password: 'Mo@2024', name: 'Moniteur PALMCI',             role: 'MO',               operateur: 'PALMCI' },
+  'es@palmci.ci': { password: 'Es@2024', name: 'Équipe Spéciale PALMCI',      role: 'ES',               operateur: 'PALMCI' },
+  'se@palmci.ci': { password: 'Se@2024', name: 'Secrétaire PALMCI',           role: 'SE',               operateur: 'PALMCI' },
+  'su@palmci.ci': { password: 'Su@2024', name: 'Superviseur PALMCI',          role: 'SU',               operateur: 'PALMCI' },
+  'di@palmci.ci': { password: 'Di@2024', name: 'Directeur PALMCI',            role: 'DI',               operateur: 'PALMCI' },
+
+  // ── SOGB (op-3) ─────────────────────────────────────────────────────────────
+  'cd@sogb.ci': { password: 'Cd@2024', name: 'Chef Département SOGB',     role: 'chef_departement', operateur: 'SOGB' },
+  'cs@sogb.ci': { password: 'Cs@2024', name: 'Chef Secteur SOGB',         role: 'chef_secteur',     operateur: 'SOGB' },
+  'cf@sogb.ci': { password: 'Cf@2024', name: 'Contrôleur Formation SOGB', role: 'CF',               operateur: 'SOGB' },
+  'co@sogb.ci': { password: 'Co@2024', name: 'Contrôleur Ordinaire SOGB', role: 'CO',               operateur: 'SOGB' },
+  'fs@sogb.ci': { password: 'Fs@2024', name: 'Formateur Saigné SOGB',     role: 'FS',               operateur: 'SOGB' },
+  'mo@sogb.ci': { password: 'Mo@2024', name: 'Moniteur SOGB',             role: 'MO',               operateur: 'SOGB' },
+  'es@sogb.ci': { password: 'Es@2024', name: 'Équipe Spéciale SOGB',      role: 'ES',               operateur: 'SOGB' },
+  'se@sogb.ci': { password: 'Se@2024', name: 'Secrétaire SOGB',           role: 'SE',               operateur: 'SOGB' },
+  'su@sogb.ci': { password: 'Su@2024', name: 'Superviseur SOGB',          role: 'SU',               operateur: 'SOGB' },
+  'di@sogb.ci': { password: 'Di@2024', name: 'Directeur SOGB',            role: 'DI',               operateur: 'SOGB' },
 };
 
 const ROLE_HOME: Record<string, string> = {
@@ -30,6 +57,7 @@ const ROLE_HOME: Record<string, string> = {
   CO:               '/collab/dashboard',
   FS:               '/collab/dashboard',
   MO:               '/collab/dashboard',
+  ES:               '/collab/dashboard',
   SE:               '/collab/dashboard',
   SU:               '/collab/dashboard',
   DI:               '/collab/dashboard',

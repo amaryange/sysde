@@ -10,7 +10,7 @@ import { useAuthStore } from '../../Store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import { ToastContainer } from 'react-toastify';
 
-const COLLAB_ROLES = ['collaborateur', 'CF', 'CO', 'FS', 'MO', 'SE', 'SU', 'DI'];
+const COLLAB_ROLES = ['collaborateur', 'CF', 'CO', 'FS', 'MO', 'ES', 'SE', 'SU', 'DI'];
 
 export default function CollaborateurLayout({ children }: { children: React.ReactNode }) {
   const sideBarType     = useThemeStore((s) => s.sideBarType);
