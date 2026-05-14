@@ -2,6 +2,7 @@ import React, { Fragment, useEffect, useState } from 'react';
 import { MENUITEMS } from '@/Data/SidebarData';
 import { MENUITEMS_CD } from '@/Data/SidebarDataCD';
 import { MENUITEMS_CS } from '@/Data/SidebarDataCS';
+import { MENUITEMS_COLLAB } from '@/Data/SidebarDataCollab';
 import { MenuItem } from '@/Type/SideBarType';
 import SidebarMenuDropDown from './SidebarMenuDropDown';
 import { usePathname } from 'next/navigation';
@@ -11,6 +12,7 @@ const SidebarMenuList = () => {
   const role     = useAuthStore((s) => s.user?.role);
   const menuData = role === 'chef_departement' ? MENUITEMS_CD
                  : role === 'chef_secteur'     ? MENUITEMS_CS
+                 : role === 'collaborateur'    ? MENUITEMS_COLLAB
                  : MENUITEMS;
   const pathname = usePathname();
   const [active, setActive] = useState(pathname ? pathname : '');

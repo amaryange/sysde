@@ -21,12 +21,20 @@ const avatarStyle: React.CSSProperties = {
   flexShrink: 0,
 };
 
+const COMPTE_PATH: Record<string, string> = {
+  admin:            '/reglages',
+  chef_departement: '/cd/compte',
+  chef_secteur:     '/cs/compte',
+  collaborateur:    '/collab/compte',
+};
+
 const SideBarProfile = () => {
   const user = useAuthStore((s) => s.user);
+  const comptePath = COMPTE_PATH[user?.role ?? ''] ?? '/reglages';
 
   return (
     <div className='sidebar-user text-center'>
-      <Link className='setting-primary' href='/reglages'>
+      <Link className='setting-primary' href={comptePath}>
         <Settings />
       </Link>
       {user?.image ? (

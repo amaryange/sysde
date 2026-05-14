@@ -12,12 +12,14 @@ const DEFAULT_USERS: Record<string, { password: string; name: string; role: stri
   'admin@apromac.ci':  { password: 'Apromac@2024', name: 'Admin APROMAC',      role: 'admin',             operateur: 'APROMAC' },
   'cd@firca.ci':       { password: 'Cd@2024',      name: 'Chef Département CD', role: 'chef_departement' },
   'cs@firca.ci':       { password: 'Cs@2024',      name: 'Chef Secteur CS',     role: 'chef_secteur'     },
+  'collab@firca.ci':   { password: 'Collab@2024',  name: 'Collaborateur FIRCA', role: 'collaborateur'    },
 };
 
 const ROLE_HOME: Record<string, string> = {
   admin:             '/dashboard',
   chef_departement:  '/cd/parametres',
   chef_secteur:      '/cs/parametres',
+  collaborateur:     '/collab/plannings',
 };
 
 const LoginTab = () => {
