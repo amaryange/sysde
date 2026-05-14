@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/Store/useAuthStore';
 import LoginTab from '@/Component/Auth/Tabs/LoginTab';
 import { AssetsImagePath } from '@/Constant';
+import { ToastContainer } from 'react-toastify';
 
 const LoginPage = () => {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -136,6 +137,8 @@ const LoginPage = () => {
           .login-brand-panel { display: none !important; }
         }
       `}</style>
+
+      <ToastContainer position='top-right' autoClose={3000} />
     </div>
   );
 };

@@ -7,19 +7,33 @@ import { useAuthStore } from '@/Store/useAuthStore';
 import { toast } from 'react-toastify';
 
 const DEFAULT_USERS: Record<string, { password: string; name: string; role: string; operateur?: string }> = {
-  'Test123@gmail.com': { password: 'Test@123',     name: 'Admin SYSDE',        role: 'admin'             },
-  'admin@firca.ci':    { password: 'Firca@2024',   name: 'Admin FIRCA',        role: 'admin',             operateur: 'FIRCA'   },
-  'admin@apromac.ci':  { password: 'Apromac@2024', name: 'Admin APROMAC',      role: 'admin',             operateur: 'APROMAC' },
-  'cd@firca.ci':       { password: 'Cd@2024',      name: 'Chef Département CD', role: 'chef_departement' },
-  'cs@firca.ci':       { password: 'Cs@2024',      name: 'Chef Secteur CS',     role: 'chef_secteur'     },
-  'collab@firca.ci':   { password: 'Collab@2024',  name: 'Collaborateur FIRCA', role: 'collaborateur'    },
+  'Test123@gmail.com': { password: 'Test@123',     name: 'Admin SYSDE',              role: 'admin'            },
+  'admin@firca.ci':    { password: 'Firca@2024',   name: 'Admin FIRCA',              role: 'admin',            operateur: 'FIRCA'   },
+  'admin@apromac.ci':  { password: 'Apromac@2024', name: 'Admin APROMAC',            role: 'admin',            operateur: 'APROMAC' },
+  'cd@saph.ci':        { password: 'Cd@2024',      name: 'Chef Département',         role: 'chef_departement', operateur: 'SAPH'    },
+  'cs@saph.ci':        { password: 'Cs@2024',      name: 'Chef Secteur',             role: 'chef_secteur',     operateur: 'SAPH'    },
+  'cf@palmci.ci':      { password: 'Cf@2024',      name: 'Contrôleur Formation',     role: 'CF',               operateur: 'PALMCI'  },
+  'co@palmci.ci':      { password: 'Co@2024',      name: 'Contrôleur Ordinaire',     role: 'CO',               operateur: 'PALMCI'  },
+  'fs@sogb.ci':        { password: 'Fs@2024',      name: 'Formateur Saigné',         role: 'FS',               operateur: 'SOGB'    },
+  'mo@sogb.ci':        { password: 'Mo@2024',      name: 'Moniteur',                 role: 'MO',               operateur: 'SOGB'    },
+  'se@saph.ci':        { password: 'Se@2024',      name: 'Secrétaire',               role: 'SE',               operateur: 'SAPH'    },
+  'su@saph.ci':        { password: 'Su@2024',      name: 'Superviseur',              role: 'SU',               operateur: 'SAPH'    },
+  'di@saph.ci':        { password: 'Di@2024',      name: 'Directeur',                role: 'DI',               operateur: 'SAPH'    },
+  'collab@saph.ci':    { password: 'Collab@2024',  name: 'Collaborateur SAPH',       role: 'CF',               operateur: 'SAPH'    },
 };
 
 const ROLE_HOME: Record<string, string> = {
-  admin:             '/dashboard',
-  chef_departement:  '/cd/dashboard',
-  chef_secteur:      '/cs/dashboard',
-  collaborateur:     '/collab/plannings',
+  admin:            '/dashboard',
+  chef_departement: '/cd/dashboard',
+  chef_secteur:     '/cs/dashboard',
+  CF:               '/collab/dashboard',
+  CO:               '/collab/dashboard',
+  FS:               '/collab/dashboard',
+  MO:               '/collab/dashboard',
+  SE:               '/collab/dashboard',
+  SU:               '/collab/dashboard',
+  DI:               '/collab/dashboard',
+  collaborateur:    '/collab/dashboard',
 };
 
 const LoginTab = () => {
