@@ -10,6 +10,8 @@ import { useAuthStore } from '../../Store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import { ToastContainer } from 'react-toastify';
 
+const COLLAB_ROLES = ['collaborateur', 'CF', 'CO', 'FS', 'MO', 'SE', 'SU', 'DI'];
+
 export default function CollaborateurLayout({ children }: { children: React.ReactNode }) {
   const sideBarType     = useThemeStore((s) => s.sideBarType);
   const backGround      = useHeaderStore((s) => s.backGroundChange);
@@ -18,10 +20,12 @@ export default function CollaborateurLayout({ children }: { children: React.Reac
   const user            = useAuthStore((s) => s.user);
   const router          = useRouter();
 
+  const isCollaborateur = user ? COLLAB_ROLES.includes(user.role) : false;
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.push('/auth/login');
-    } else if (user?.role !== 'collaborateur') {
+    } else if (user && !COLLAB_ROLES.includes(user.role)) {
       router.push('/auth/forbidden');
     }
   }, [isAuthenticated, user, router]);
@@ -44,7 +48,7 @@ export default function CollaborateurLayout({ children }: { children: React.Reac
     return () => window.removeEventListener('resize', handleResize);
   }, [sideBarType]);
 
-  if (!isAuthenticated || user?.role !== 'collaborateur') return null;
+  if (!isAuthenticated || !isCollaborateur) return null;
 
   return (
     <div id='mainLayout' className={backGround}>
