@@ -11,18 +11,11 @@ import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 import { useLog } from '@/hooks/useLog';
-
-type Operateur = { id: number; rs: string; acronyme: string; adresse: string; email: string; tel: string; encadreur: boolean };
-
-const INITIAL: Operateur[] = [
-  { id: 1, rs: 'ASSOCIATION DES PROFESSIONNELS DU CAOUTCHOUC',                      acronyme: 'APROMAC', adresse: '12 Bd Lagunaire, Abidjan',    email: 'contact@apromac.ci', tel: '01020304', encadreur: false },
-  { id: 2, rs: 'FONDS INTERPROFESSIONNEL POUR LA RECHERCHE ET LE CONSEIL AGRICOLE', acronyme: 'FIRCA',   adresse: '01 BP 3726 Abidjan 01',        email: 'info@firca.ci',      tel: '05060708', encadreur: false },
-  { id: 3, rs: 'SOCIETE AFRICAINE DE PLANTATION DHEVEA',                             acronyme: 'SAPH',    adresse: '08 BP 2188 Abidjan 08',        email: 'contact@saph.ci',    tel: '01020304', encadreur: true  },
-  { id: 4, rs: 'SOCIETE DE CAOUTCHOUC DU PALMCI',                                   acronyme: 'PALMCI',  adresse: '15 Rue des Palmiers, Abidjan', email: 'info@palmci.ci',     tel: '05060708', encadreur: true  },
-  { id: 5, rs: 'SOCIETE DE CAOUTCHOUC DE GRAND-BEREBY',                             acronyme: 'SOGB',    adresse: 'Grand-Béréby, Sud-Ouest',      email: 'sogb@sogb.ci',       tel: '07080910', encadreur: true  },
-];
+import { MOCK_OPERATEURS, MockOperateur } from '@/Data/mockData';
 
 const PAGE_SIZE = 6;
+const colStyle: React.CSSProperties   = { padding: '4px 8px' };
+const inputStyle: React.CSSProperties = { fontSize: 12, padding: '3px 6px', height: 28 };
 
 const ENC_FILTER: ComboboxOption[] = [
   { value: '',    label: 'Tous'          },
@@ -30,22 +23,21 @@ const ENC_FILTER: ComboboxOption[] = [
   { value: 'Non', label: 'Non-encadreur'},
 ];
 
-const emptyForm = (): Omit<Operateur, 'id'> => ({ rs: '', acronyme: '', adresse: '', email: '', tel: '', encadreur: false });
-
-const colStyle: React.CSSProperties   = { padding: '4px 8px' };
-const inputStyle: React.CSSProperties = { fontSize: 12, padding: '3px 6px', height: 28 };
+const emptyForm = (): Omit<MockOperateur, 'id'> => ({
+  rs: '', acronyme: '', adresse: '', email: '', tel: '', encadreur: false,
+});
 
 const OperateurList = () => {
   const router       = useRouter();
   const pathname     = usePathname();
   const searchParams = useSearchParams();
+  const log          = useLog();
 
-  const log = useLog();
-  const [data,    setData   ] = useState<Operateur[]>(INITIAL);
-  const [modal,   setModal  ] = useState(false);
-  const [editing, setEditing] = useState<Operateur | null>(null);
+  const [data,         setData        ] = useState<MockOperateur[]>(MOCK_OPERATEURS);
+  const [modal,        setModal       ] = useState(false);
+  const [editing,      setEditing     ] = useState<MockOperateur | null>(null);
   const [viewing,      setViewing     ] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Operateur | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MockOperateur | null>(null);
   const [form,         setForm        ] = useState(emptyForm);
 
   const [fRs,    setFRs   ] = useState(() => searchParams.get('op_rs')    ?? '');
@@ -74,22 +66,23 @@ const OperateurList = () => {
   const handlePage  = (p: number) => { setPage(p); pushUrl({ op_page: p > 1 ? String(p) : null }); };
 
   const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
-  const openEdit = (o: Operateur) => { setViewing(false); setEditing(o); setForm({ rs: o.rs, acronyme: o.acronyme, adresse: o.adresse, email: o.email, tel: o.tel, encadreur: o.encadreur }); setModal(true); };
-  const openView = (o: Operateur) => { setViewing(true);  setEditing(null); setForm({ rs: o.rs, acronyme: o.acronyme, adresse: o.adresse, email: o.email, tel: o.tel, encadreur: o.encadreur }); setModal(true); };
+  const openEdit = (o: MockOperateur) => { setViewing(false); setEditing(o); setForm({ rs: o.rs, acronyme: o.acronyme, adresse: o.adresse, email: o.email, tel: o.tel, encadreur: o.encadreur }); setModal(true); };
+  const openView = (o: MockOperateur) => { setViewing(true);  setEditing(null); setForm({ rs: o.rs, acronyme: o.acronyme, adresse: o.adresse, email: o.email, tel: o.tel, encadreur: o.encadreur }); setModal(true); };
+
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return;
     setData((p) => p.filter((o) => o.id !== deleteTarget.id));
     log('DELETE', 'Operateur', `Suppression de l'opérateur ${deleteTarget.acronyme}`, deleteTarget.acronyme);
     setDeleteTarget(null);
   };
+
   const handleSave = () => {
     if (!form.rs.trim() || !form.acronyme.trim()) return;
     if (editing) {
       setData((p) => p.map((o) => o.id === editing.id ? { ...o, ...form } : o));
       log('UPDATE', 'Operateur', `Modification de l'opérateur ${form.acronyme}`, form.acronyme);
     } else {
-      const nextId = Math.max(0, ...data.map((o) => o.id)) + 1;
-      setData((p) => [...p, { id: nextId, ...form }]);
+      setData((p) => [...p, { id: `op-${Date.now()}`, ...form }]);
       log('CREATE', 'Operateur', `Création de l'opérateur ${form.acronyme} — ${form.rs}`, form.acronyme);
     }
     setModal(false);
@@ -130,9 +123,9 @@ const OperateurList = () => {
                 </tr>
                 <tr>
                   <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Raison sociale…' value={fRs}    onChange={(e) => handleRs(e.target.value)}    /></th>
-                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Acronyme…'       value={fAcr}   onChange={(e) => handleAcr(e.target.value)}   /></th>
-                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Email…'          value={fEmail} onChange={(e) => handleEmail(e.target.value)} /></th>
-                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Tél…'            value={fTel}   onChange={(e) => handleTel(e.target.value)}   /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Acronyme…'        value={fAcr}   onChange={(e) => handleAcr(e.target.value)}   /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Email…'           value={fEmail} onChange={(e) => handleEmail(e.target.value)} /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Tél…'             value={fTel}   onChange={(e) => handleTel(e.target.value)}   /></th>
                   <th style={colStyle}><Combobox options={ENC_FILTER} value={ENC_FILTER.find((o) => o.value === fEnc) ?? ENC_FILTER[0]} onChange={(opt) => handleEnc(opt?.value ?? '')} isClearable={false} compact /></th>
                   <th style={colStyle} />
                 </tr>
@@ -161,8 +154,7 @@ const OperateurList = () => {
       </Card>
 
       <AppDrawer
-        isOpen={modal}
-        toggle={() => setModal(false)}
+        isOpen={modal} toggle={() => setModal(false)}
         title={viewing ? "Détails de l'opérateur" : editing ? "Modifier l'opérateur" : 'Ajouter un opérateur'}
         onSave={viewing ? undefined : handleSave}
         onCancel={() => setModal(false)}
@@ -172,7 +164,6 @@ const OperateurList = () => {
           <p className='text-muted fw-semibold small mb-2'>Identification</p>
           <FormGroup><Label>Raison sociale <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.rs}       onChange={(e) => setForm((f) => ({ ...f, rs: e.target.value }))}       placeholder='Ex: SOCIETE AFRICAINE DE PLANTATION DHEVEA' /></FormGroup>
           <FormGroup><Label>Acronyme <span className='text-danger'>*</span></Label>      <Input disabled={viewing} value={form.acronyme} onChange={(e) => setForm((f) => ({ ...f, acronyme: e.target.value }))} placeholder='Ex: SAPH' /></FormGroup>
-
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Coordonnées</p>
           <FormGroup><Label>Adresse</Label><Input disabled={viewing} value={form.adresse} onChange={(e) => setForm((f) => ({ ...f, adresse: e.target.value }))} /></FormGroup>
@@ -180,7 +171,6 @@ const OperateurList = () => {
             <Col xs='12' sm='6'><FormGroup><Label>Email</Label>    <Input disabled={viewing} type='email' value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder='contact@exemple.ci' /></FormGroup></Col>
             <Col xs='12' sm='6'><FormGroup><Label>Téléphone</Label><Input disabled={viewing}             value={form.tel}   onChange={(e) => setForm((f) => ({ ...f, tel: e.target.value }))}   placeholder='0X XX XX XX'         /></FormGroup></Col>
           </Row>
-
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Statut</p>
           <FormGroup check>

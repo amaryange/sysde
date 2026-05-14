@@ -12,44 +12,74 @@ import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
 import DateInput from '@/Component/Common/DateInput';
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 import { useLog } from '@/hooks/useLog';
+import { MOCK_CONTRATS, MOCK_OPERATEURS, MockContrat } from '@/Data/mockData';
 
-type Contrat = { id: number; num: string; operateur: string; debut: string; fin: string; signature: string; montant: number; statut: boolean };
+// ---------------------------------------------------------------------------
+// Options
+// ---------------------------------------------------------------------------
+const OPERATEURS_OPT: ComboboxOption[] = MOCK_OPERATEURS.map((o) => ({
+  value: o.id,
+  label: o.acronyme,
+}));
 
-// Uniquement les opérateurs encadreurs — les non-encadreurs (FIRCA, APROMAC…) n'ont pas de contrat
-const OPERATEURS_OPT: ComboboxOption[] = [
-  { value: 'SAPH',   label: 'SAPH'   },
-  { value: 'PALMCI', label: 'PALMCI' },
-  { value: 'SOGB',   label: 'SOGB'   },
+const OP_FILTER: ComboboxOption[] = [{ value: '', label: 'Tous' }, ...OPERATEURS_OPT];
+
+const STATUT_FILTER: ComboboxOption[] = [
+  { value: '',        label: 'Tous'     },
+  { value: 'Actif',   label: 'Actif'    },
+  { value: 'Cloture', label: 'Clôturé'  },
 ];
 
-const OP_FILTER     = [{ value: '', label: 'Tous' }, ...OPERATEURS_OPT];
-const STATUT_FILTER: ComboboxOption[] = [{ value: '', label: 'Tous' }, { value: 'Actif', label: 'Actif' }, { value: 'Cloture', label: 'Clôturé' }];
-
-const INITIAL: Contrat[] = [
-  { id: 1, num: 'CTR-2024-001', operateur: 'SAPH',   debut: '2024-01-01', fin: '2026-12-31', signature: '2023-12-15', montant: 150000000, statut: true  },
-  { id: 2, num: 'CTR-2024-002', operateur: 'PALMCI', debut: '2024-02-01', fin: '2026-01-31', signature: '2024-01-20', montant: 85000000,  statut: true  },
-  { id: 3, num: 'CTR-2023-005', operateur: 'SOGB',   debut: '2023-06-01', fin: '2026-05-31', signature: '2023-05-10', montant: 60000000,  statut: false },
-];
-
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 const PAGE_SIZE  = 6;
-const emptyForm  = () => ({ num: '', operateur: OPERATEURS_OPT[0], debut: '', fin: '', signature: '', montant: 0, statut: true });
-const fmtMontant = (n: number) => new Intl.NumberFormat('fr-CI', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n);
-
 const colStyle: React.CSSProperties   = { padding: '4px 8px' };
 const inputStyle: React.CSSProperties = { fontSize: 12, padding: '3px 6px', height: 28 };
 
+const operateurLabel = (id: string) => MOCK_OPERATEURS.find((o) => o.id === id)?.acronyme ?? id;
+const fmtMontant = (n: number) =>
+  new Intl.NumberFormat('fr-CI', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n);
+
+type ContratForm = {
+  num:          string;
+  id_operateur: ComboboxOption;
+  debut:        string;
+  fin:          string;
+  signature:    string;
+  montant:      number;
+  statut:       boolean;
+};
+
+const emptyForm = (): ContratForm => ({
+  num: '', id_operateur: OPERATEURS_OPT[0], debut: '', fin: '', signature: '', montant: 0, statut: true,
+});
+
+const fillForm = (c: MockContrat): ContratForm => ({
+  num:          c.num,
+  id_operateur: OPERATEURS_OPT.find((o) => o.value === c.id_operateur) ?? OPERATEURS_OPT[0],
+  debut:        c.debut,
+  fin:          c.fin,
+  signature:    c.signature,
+  montant:      c.montant,
+  statut:       c.statut,
+});
+
+// ---------------------------------------------------------------------------
+// Composant
+// ---------------------------------------------------------------------------
 const ContratList = () => {
   const router       = useRouter();
   const pathname     = usePathname();
   const searchParams = useSearchParams();
+  const log          = useLog();
 
-  const log = useLog();
-  const [data,    setData   ] = useState<Contrat[]>(INITIAL);
-  const [modal,   setModal  ] = useState(false);
-  const [editing, setEditing] = useState<Contrat | null>(null);
+  const [data,         setData        ] = useState<MockContrat[]>(MOCK_CONTRATS);
+  const [modal,        setModal       ] = useState(false);
+  const [editing,      setEditing     ] = useState<MockContrat | null>(null);
   const [viewing,      setViewing     ] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Contrat | null>(null);
-  const [form,         setForm        ] = useState(emptyForm);
+  const [deleteTarget, setDeleteTarget] = useState<MockContrat | null>(null);
+  const [form,         setForm        ] = useState<ContratForm>(emptyForm);
 
   const [fNum,    setFNum   ] = useState(() => searchParams.get('ct_num')   ?? '');
   const [fOp,     setFOp    ] = useState(() => searchParams.get('ct_op')    ?? '');
@@ -64,42 +94,50 @@ const ContratList = () => {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const debNum   = useDebouncedCallback((v: string) => pushUrl({ ct_num:   v || null, ct_page: null }), 300);
+  const debNum = useDebouncedCallback((v: string) => pushUrl({ ct_num: v || null, ct_page: null }), 300);
 
-  const handleNum    = (v: string) => { setFNum(v);    setPage(1); debNum(v);   };
+  const handleNum    = (v: string) => { setFNum(v);    setPage(1); debNum(v); };
   const handleDebut  = (v: string) => { setFDebut(v);  setPage(1); pushUrl({ ct_debut: v || null, ct_page: null }); };
   const handleFin    = (v: string) => { setFFin(v);    setPage(1); pushUrl({ ct_fin:   v || null, ct_page: null }); };
-  const handleOp     = (v: string) => { setFOp(v);     setPage(1); pushUrl({ ct_op:  v || null, ct_page: null }); };
-  const handleStatut = (v: string) => { setFStatut(v); setPage(1); pushUrl({ ct_sta: v || null, ct_page: null }); };
+  const handleOp     = (v: string) => { setFOp(v);     setPage(1); pushUrl({ ct_op:    v || null, ct_page: null }); };
+  const handleStatut = (v: string) => { setFStatut(v); setPage(1); pushUrl({ ct_sta:   v || null, ct_page: null }); };
   const handlePage   = (p: number) => { setPage(p); pushUrl({ ct_page: p > 1 ? String(p) : null }); };
 
   const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
-  const fillForm = (c: Contrat) => ({ num: c.num, debut: c.debut, fin: c.fin, signature: c.signature, montant: c.montant, statut: c.statut, operateur: OPERATEURS_OPT.find((o) => o.value === c.operateur) ?? OPERATEURS_OPT[0] });
-  const openEdit = (c: Contrat) => { setViewing(false); setEditing(c); setForm(fillForm(c)); setModal(true); };
-  const openView = (c: Contrat) => { setViewing(true);  setEditing(null); setForm(fillForm(c)); setModal(true); };
+  const openEdit = (c: MockContrat) => { setViewing(false); setEditing(c); setForm(fillForm(c)); setModal(true); };
+  const openView = (c: MockContrat) => { setViewing(true);  setEditing(null); setForm(fillForm(c)); setModal(true); };
+
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return;
     setData((p) => p.filter((c) => c.id !== deleteTarget.id));
     log('DELETE', 'Contrat', `Suppression du contrat ${deleteTarget.num}`, deleteTarget.num);
     setDeleteTarget(null);
   };
+
   const handleSave = () => {
     if (!form.num.trim() || !form.debut || !form.fin) return;
-    const payload = { num: form.num, operateur: form.operateur.value, debut: form.debut, fin: form.fin, signature: form.signature, montant: form.montant, statut: form.statut };
+    const payload: Omit<MockContrat, 'id'> = {
+      num:          form.num,
+      id_operateur: form.id_operateur.value,
+      debut:        form.debut,
+      fin:          form.fin,
+      signature:    form.signature,
+      montant:      form.montant,
+      statut:       form.statut,
+    };
     if (editing) {
-      setData((p) => p.map((c) => c.id === editing.id ? { ...c, ...payload } : c));
+      setData((p) => p.map((c) => c.id === editing.id ? { id: editing.id, ...payload } : c));
       log('UPDATE', 'Contrat', `Modification du contrat ${form.num}`, form.num);
     } else {
-      const nextId = Math.max(0, ...data.map((c) => c.id)) + 1;
-      setData((p) => [...p, { id: nextId, ...payload }]);
-      log('CREATE', 'Contrat', `Création du contrat ${form.num} — ${form.operateur.value}`, form.num);
+      setData((p) => [...p, { id: `ct-${Date.now()}`, ...payload }]);
+      log('CREATE', 'Contrat', `Création du contrat ${form.num} — ${form.id_operateur.label}`, form.num);
     }
     setModal(false);
   };
 
   const filtered = useMemo(() => data.filter((c) => (
     (!fNum    || c.num.toLowerCase().includes(fNum.toLowerCase())) &&
-    (!fOp     || c.operateur === fOp) &&
+    (!fOp     || c.id_operateur === fOp) &&
     (!fDebut  || c.debut === fDebut) &&
     (!fFin    || c.fin === fFin) &&
     (!fStatut || (fStatut === 'Actif' ? c.statut : !c.statut))
@@ -132,8 +170,8 @@ const ContratList = () => {
                   <th style={{ width: '12%' }} className='text-end'>Actions</th>
                 </tr>
                 <tr>
-                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Numéro…' value={fNum}   onChange={(e) => handleNum(e.target.value)}   /></th>
-                  <th style={colStyle}><Combobox options={OP_FILTER} value={OP_FILTER.find((o) => o.value === fOp) ?? OP_FILTER[0]} onChange={(opt) => handleOp(opt?.value ?? '')} isClearable={false} compact /></th>
+                  <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Numéro…' value={fNum} onChange={(e) => handleNum(e.target.value)} /></th>
+                  <th style={colStyle}><Combobox options={OP_FILTER}     value={OP_FILTER.find((o) => o.value === fOp)       ?? OP_FILTER[0]}     onChange={(opt) => handleOp(opt?.value ?? '')}     isClearable={false} compact /></th>
                   <th style={colStyle}><DateInput compact value={fDebut} onChange={handleDebut} /></th>
                   <th style={colStyle}><DateInput compact value={fFin}   onChange={handleFin}   /></th>
                   <th style={colStyle} />
@@ -147,7 +185,7 @@ const ContratList = () => {
                 ) : paginated.map((c) => (
                   <tr key={c.id}>
                     <td className='f-w-600'><code>{c.num}</code></td>
-                    <td>{c.operateur}</td>
+                    <td>{operateurLabel(c.id_operateur)}</td>
                     <td className='text-muted'>{c.debut}</td>
                     <td className='text-muted'>{c.fin}</td>
                     <td>{fmtMontant(c.montant)}</td>
@@ -166,8 +204,7 @@ const ContratList = () => {
       </Card>
 
       <AppDrawer
-        isOpen={modal}
-        toggle={() => setModal(false)}
+        isOpen={modal} toggle={() => setModal(false)}
         title={viewing ? 'Détails du contrat' : editing ? 'Modifier le contrat' : 'Ajouter un contrat'}
         onSave={viewing ? undefined : handleSave}
         onCancel={() => setModal(false)}
@@ -176,10 +213,13 @@ const ContratList = () => {
         <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
           <p className='text-muted fw-semibold small mb-2'>Identification</p>
           <Row>
-            <Col xs='12' sm='6'><FormGroup><Label>Numéro contrat <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.num} onChange={(e) => setForm((f) => ({ ...f, num: e.target.value }))} placeholder='CTR-2024-001' /></FormGroup></Col>
-            <Col xs='12' sm='6'><FormGroup><Label>Opérateur</Label><Combobox isDisabled={viewing} options={OPERATEURS_OPT} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} /></FormGroup></Col>
+            <Col xs='12' sm='6'>
+              <FormGroup><Label>Numéro contrat <span className='text-danger'>*</span></Label><Input disabled={viewing} value={form.num} onChange={(e) => setForm((f) => ({ ...f, num: e.target.value }))} placeholder='CTR-2024-001' /></FormGroup>
+            </Col>
+            <Col xs='12' sm='6'>
+              <Combobox label='Opérateur' isDisabled={viewing} options={OPERATEURS_OPT} value={form.id_operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, id_operateur: opt }))} />
+            </Col>
           </Row>
-
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Période</p>
           <Row>
@@ -187,11 +227,9 @@ const ContratList = () => {
             <Col xs='12' sm='4'><DateInput disabled={viewing} label='Fin'       required value={form.fin}       onChange={(v) => setForm((f) => ({ ...f, fin: v }))}       /></Col>
             <Col xs='12' sm='4'><DateInput disabled={viewing} label='Signature'          value={form.signature} onChange={(v) => setForm((f) => ({ ...f, signature: v }))} /></Col>
           </Row>
-
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Financier</p>
           <FormGroup><Label>Montant (FCFA)</Label><Input disabled={viewing} type='number' min={0} value={form.montant} onChange={(e) => setForm((f) => ({ ...f, montant: Number(e.target.value) }))} /></FormGroup>
-
           <hr style={{ borderColor: 'transparent' }} />
           <p className='text-muted fw-semibold small mb-2'>Statut</p>
           <FormGroup check>
