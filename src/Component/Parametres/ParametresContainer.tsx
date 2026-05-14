@@ -7,7 +7,8 @@ import OperateurList from './Operateur/OperateurList';
 import PosteList     from './Poste/PosteList';
 import ContratList   from './Contrat/ContratList';
 import ExerciceList  from './Exercice/ExerciceList';
-import LotList       from './Lot/LotList';
+import LotContainer     from './Lot/LotContainer';
+import SecteurContainer from './Secteur/SecteurContainer';
 import LogsList      from './Logs/LogsList';
 
 const TABS = [
@@ -16,6 +17,7 @@ const TABS = [
   { id: 'contrat',   label: 'Contrat'   },
   { id: 'exercice',  label: 'Exercice'  },
   { id: 'lot',       label: 'Lot'       },
+  { id: 'secteur',   label: 'Secteur'   },
 ];
 
 const ParametresContainer = () => {
@@ -49,7 +51,8 @@ const ParametresContainer = () => {
         <TabPane tabId='poste'>    <PosteList     /></TabPane>
         <TabPane tabId='contrat'>  <ContratList   /></TabPane>
         <TabPane tabId='exercice'> <ExerciceList  /></TabPane>
-        <TabPane tabId='lot'>      <LotList       /></TabPane>
+        <TabPane tabId='lot'>      <LotContainer     /></TabPane>
+        <TabPane tabId='secteur'>  <SecteurContainer /></TabPane>
         <TabPane tabId='logs'>     <LogsList      /></TabPane>
       </TabContent>
     </Container>
