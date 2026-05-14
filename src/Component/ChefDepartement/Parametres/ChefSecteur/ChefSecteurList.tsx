@@ -11,6 +11,7 @@ import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 import { useLog } from '@/hooks/useLog';
+import { useAuthStore } from '@/Store/useAuthStore';
 import {
   MOCK_OPERATEURS,
   MOCK_SECTEURS,
@@ -133,6 +134,13 @@ const ChefSecteurList = () => {
   const searchParams = useSearchParams();
   const log          = useLog();
 
+  const user         = useAuthStore((s) => s.user);
+  const userOpId     = MOCK_OPERATEURS.find((o) => o.acronyme === user?.operateur)?.id ?? null;
+  const isLocked     = userOpId !== null;
+  const lockedOpOpt: ComboboxOption | null = isLocked
+    ? (OPERATEURS_OPT.find((o) => o.value === userOpId) ?? null)
+    : null;
+
   const [data,         setData        ] = useState<ChefSecteur[]>(INITIAL);
   const [modal,        setModal       ] = useState(false);
   const [editing,      setEditing     ] = useState<ChefSecteur | null>(null);
@@ -164,7 +172,7 @@ const ChefSecteurList = () => {
   const handleStatut = (v: string) => { setFStatut(v); setPage(1); pushUrl({ cs_sta: v || null, cs_page: null }); };
   const handlePage   = (p: number) => { setPage(p); pushUrl({ cs_page: p > 1 ? String(p) : null }); };
 
-  const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
+  const openAdd  = () => { setViewing(false); setEditing(null); setForm({ ...emptyForm(), operateur: lockedOpOpt }); setModal(true); };
   const openEdit = (cs: ChefSecteur) => { setViewing(false); setEditing(cs);   setForm(fillForm(cs)); setModal(true); };
   const openView = (cs: ChefSecteur) => { setViewing(true);  setEditing(null); setForm(fillForm(cs)); setModal(true); };
 
@@ -234,13 +242,18 @@ const ChefSecteurList = () => {
     }));
   };
 
-  const filtered = useMemo(() => data.filter((cs) =>
-    (!fCde    || cs.cde.toLowerCase().includes(fCde.toLowerCase())) &&
-    (!fLib    || cs.lib.toLowerCase().includes(fLib.toLowerCase())) &&
-    (!fOp     || MOCK_OPERATEUR_SECTEUR.find((o) => o.id === cs.id_operateur_secteur)?.id_operateur === fOp) &&
-    (!fSec    || cs.lib_secteur.toLowerCase().includes(fSec.toLowerCase()) || cs.cde_secteur.includes(fSec)) &&
-    (!fStatut || (fStatut === 'Actif' ? cs.actif : !cs.actif))
-  ), [data, fCde, fLib, fOp, fSec, fStatut]);
+  const filtered = useMemo(() => {
+    const base = isLocked
+      ? data.filter((cs) => MOCK_OPERATEUR_SECTEUR.find((os) => os.id === cs.id_operateur_secteur)?.id_operateur === userOpId)
+      : data;
+    return base.filter((cs) =>
+      (!fCde    || cs.cde.toLowerCase().includes(fCde.toLowerCase())) &&
+      (!fLib    || cs.lib.toLowerCase().includes(fLib.toLowerCase())) &&
+      (!fOp     || MOCK_OPERATEUR_SECTEUR.find((o) => o.id === cs.id_operateur_secteur)?.id_operateur === fOp) &&
+      (!fSec    || cs.lib_secteur.toLowerCase().includes(fSec.toLowerCase()) || cs.cde_secteur.includes(fSec)) &&
+      (!fStatut || (fStatut === 'Actif' ? cs.actif : !cs.actif))
+    );
+  }, [data, fCde, fLib, fOp, fSec, fStatut, isLocked, userOpId]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -272,7 +285,7 @@ const ChefSecteurList = () => {
                   <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Code…'    value={fCde} onChange={(e) => handleCde(e.target.value)} /></th>
                   <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Libellé…' value={fLib} onChange={(e) => handleLib(e.target.value)} /></th>
                   <th style={colStyle} />
-                  <th style={colStyle}><Combobox options={OPERATEURS_FILTER} value={OPERATEURS_FILTER.find((o) => o.value === fOp) ?? OPERATEURS_FILTER[0]} onChange={(opt) => handleOp(opt?.value ?? '')} isClearable={false} compact /></th>
+                  <th style={colStyle}>{!isLocked && <Combobox options={OPERATEURS_FILTER} value={OPERATEURS_FILTER.find((o) => o.value === fOp) ?? OPERATEURS_FILTER[0]} onChange={(opt) => handleOp(opt?.value ?? '')} isClearable={false} compact />}</th>
                   <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Secteur…' value={fSec} onChange={(e) => handleSec(e.target.value)} /></th>
                   <th style={colStyle}><Combobox options={STATUT_FILTER}     value={STATUT_FILTER.find((o) => o.value === fStatut) ?? STATUT_FILTER[0]}     onChange={(opt) => handleStatut(opt?.value ?? '')} isClearable={false} compact /></th>
                   <th style={colStyle} />
@@ -349,7 +362,7 @@ const ChefSecteurList = () => {
             <Col xs='12'>
               <Combobox
                 label='Opérateur *'
-                isDisabled={viewing}
+                isDisabled={viewing || isLocked}
                 options={OPERATEURS_OPT}
                 value={form.operateur}
                 onChange={handleOperateurChange}
