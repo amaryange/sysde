@@ -9,7 +9,7 @@ import CollaborateurList from './Collaborateur/CollaborateurList';
 const ALL_TABS = [
   { id: 'utilisateur',   label: 'Utilisateur'        },
   { id: 'chef_secteur',  label: 'Chef Secteur'        },
-  { id: 'collaborateur', label: 'Chef de département' },
+  { id: 'collaborateur', label: 'Collaborateur'        },
 ];
 
 const TachesContainer = ({ allowedTabs }: { allowedTabs?: string[] }) => {
