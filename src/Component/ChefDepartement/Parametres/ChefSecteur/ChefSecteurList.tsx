@@ -13,62 +13,50 @@ import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 import { useLog } from '@/hooks/useLog';
 import {
   MOCK_OPERATEURS,
-  MOCK_ROLES,
   MOCK_SECTEURS,
   MOCK_OPERATEUR_SECTEUR,
   MOCK_OPERATEUR_LOT,
 } from '@/Data/mockData';
 
 // ---------------------------------------------------------------------------
-// Types
+// Types — Chef Secteur (CS) uniquement
 // ---------------------------------------------------------------------------
-type Poste = {
-  id:                    string;
-  lib:                   string;
-  cde:                   string;
-  nbre_postes:           number;
-  role:                  string;
-  id_operateur_secteur:  string;
-  cde_secteur:           string;
-  lib_secteur:           string;
-  cde_lot:               string;   // ex: 'LT-01,LT-02,LT-03'
-  num_lot:               string;   // ex: '1, 2, 3'
-  cde_section:           string;
-  region:                string;
-  departement:           string;
-  sprefecture:           string;
-  actif:                 boolean;
+type ChefSecteur = {
+  id:                   string;
+  lib:                  string;
+  cde:                  string;
+  nbre_postes:          number;
+  id_operateur_secteur: string;
+  cde_secteur:          string;
+  lib_secteur:          string;
+  cde_lot:              string;
+  num_lot:              string;
+  cde_section:          string;
+  region:               string;
+  departement:          string;
+  sprefecture:          string;
+  actif:                boolean;
 };
 
-type PosteForm = {
-  lib:                   string;
-  cde:                   string;
-  nbre_postes:           number;
-  role:                  ComboboxOption;
-  operateur:             ComboboxOption | null;
-  operateur_secteur:     ComboboxOption | null;   // value = id de operateur_secteur
-  cde_secteur:           string;
-  lib_secteur:           string;
-  lots:                  ComboboxOption[];
-  cde_section:           string;
-  region:                string;
-  departement:           string;
-  sprefecture:           string;
-  actif:                 boolean;
+type ChefSecteurForm = {
+  lib:                  string;
+  cde:                  string;
+  nbre_postes:          number;
+  operateur:            ComboboxOption | null;
+  operateur_secteur:    ComboboxOption | null;
+  cde_secteur:          string;
+  lib_secteur:          string;
+  lots:                 ComboboxOption[];
+  cde_section:          string;
+  region:               string;
+  departement:          string;
+  sprefecture:          string;
+  actif:                boolean;
 };
 
 // ---------------------------------------------------------------------------
-// Options statiques dérivées des mocks
+// Options
 // ---------------------------------------------------------------------------
-const ROLES_OPT: ComboboxOption[] = MOCK_ROLES
-  .filter((r) => r.encadreur)
-  .map((r) => ({ value: r.id, label: `${r.acronyme} — ${r.nom}` }));
-
-const ROLES_FILTER: ComboboxOption[] = [
-  { value: '', label: 'Tous' },
-  ...MOCK_ROLES.filter((r) => r.encadreur).map((r) => ({ value: r.acronyme, label: r.acronyme })),
-];
-
 const OPERATEURS_OPT: ComboboxOption[] = MOCK_OPERATEURS
   .filter((o) => MOCK_OPERATEUR_SECTEUR.some((os) => os.id_operateur === o.id))
   .map((o) => ({ value: o.id, label: o.acronyme }));
@@ -82,91 +70,82 @@ const STATUT_FILTER: ComboboxOption[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Données initiales
+// Données initiales — postes CS uniquement
 // ---------------------------------------------------------------------------
-const INITIAL: Poste[] = [
-  { id: 'po-1', lib: 'Chef Secteur Abengourou',           cde: 'CS-ABG-001', nbre_postes: 1, role: 'rl-1', id_operateur_secteur: 'os-1', cde_secteur: '001', lib_secteur: 'Abengourou',   cde_lot: 'LT-01,LT-02,LT-03', num_lot: '1, 2, 3', cde_section: 'A, B', region: 'Indénié-Djuablin', departement: 'Abengourou',   sprefecture: 'Abengourou',   actif: true  },
-  { id: 'po-2', lib: 'Contrôleur Formation L1',           cde: 'CF-ABG-001', nbre_postes: 2, role: 'rl-2', id_operateur_secteur: 'os-1', cde_secteur: '001', lib_secteur: 'Abengourou',   cde_lot: 'LT-01',             num_lot: '1',       cde_section: 'A',    region: 'Indénié-Djuablin', departement: 'Abengourou',   sprefecture: 'Abengourou',   actif: true  },
-  { id: 'po-3', lib: 'Moniteur Bondoukou 1',              cde: 'MO-BDK-001', nbre_postes: 3, role: 'rl-5', id_operateur_secteur: 'os-3', cde_secteur: '002', lib_secteur: 'Bondoukou',    cde_lot: 'LT-04',             num_lot: '4',       cde_section: 'C',    region: 'Zanzan',           departement: 'Bondoukou',    sprefecture: 'Bondoukou',    actif: true  },
-  { id: 'po-4', lib: 'Formateur Saigné Tanda',            cde: 'FS-TDA-001', nbre_postes: 2, role: 'rl-4', id_operateur_secteur: 'os-5', cde_secteur: '004', lib_secteur: 'Tanda',        cde_lot: 'LT-08,LT-09',       num_lot: '8, 9',    cde_section: 'D',    region: 'Zanzan',           departement: 'Tanda',        sprefecture: 'Tanda',        actif: false },
-  { id: 'po-5', lib: 'Équipe Spéciale Daoukro',           cde: 'ES-DKR-001', nbre_postes: 1, role: 'rl-6', id_operateur_secteur: 'os-4', cde_secteur: '005', lib_secteur: 'Daoukro',      cde_lot: 'LT-10',             num_lot: '10',      cde_section: 'E',    region: "N'Zi-Comoé",      departement: 'Daoukro',      sprefecture: 'Daoukro',      actif: true  },
-  { id: 'po-6', lib: 'Contrôleur Ordinaire Agnibilékrou', cde: 'CO-AGN-001', nbre_postes: 4, role: 'rl-3', id_operateur_secteur: 'os-2', cde_secteur: '003', lib_secteur: 'Agnibilékrou', cde_lot: 'LT-06,LT-07',       num_lot: '6, 7',    cde_section: 'F',    region: 'Indénié-Djuablin', departement: 'Agnibilékrou', sprefecture: 'Agnibilékrou', actif: true  },
+const INITIAL: ChefSecteur[] = [
+  { id: 'cs-1', lib: 'Chef Secteur Abengourou',   cde: 'CS-ABG-001', nbre_postes: 1, id_operateur_secteur: 'os-1', cde_secteur: '001', lib_secteur: 'Abengourou',   cde_lot: 'LT-01,LT-02,LT-03', num_lot: '1, 2, 3', cde_section: 'A, B', region: 'Indénié-Djuablin', departement: 'Abengourou',   sprefecture: 'Abengourou',   actif: true  },
+  { id: 'cs-2', lib: 'Chef Secteur Bondoukou',    cde: 'CS-BDK-001', nbre_postes: 1, id_operateur_secteur: 'os-3', cde_secteur: '002', lib_secteur: 'Bondoukou',    cde_lot: 'LT-04,LT-05',       num_lot: '4, 5',    cde_section: 'C',    region: 'Zanzan',           departement: 'Bondoukou',    sprefecture: 'Bondoukou',    actif: true  },
+  { id: 'cs-3', lib: 'Chef Secteur Agnibilékrou', cde: 'CS-AGN-001', nbre_postes: 1, id_operateur_secteur: 'os-2', cde_secteur: '003', lib_secteur: 'Agnibilékrou', cde_lot: 'LT-06,LT-07',       num_lot: '6, 7',    cde_section: 'F',    region: 'Indénié-Djuablin', departement: 'Agnibilékrou', sprefecture: 'Agnibilékrou', actif: true  },
+  { id: 'cs-4', lib: 'Chef Secteur Tanda',        cde: 'CS-TDA-001', nbre_postes: 1, id_operateur_secteur: 'os-5', cde_secteur: '004', lib_secteur: 'Tanda',        cde_lot: 'LT-08,LT-09',       num_lot: '8, 9',    cde_section: 'D',    region: 'Zanzan',           departement: 'Tanda',        sprefecture: 'Tanda',        actif: false },
 ];
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 8;
 const colStyle: React.CSSProperties   = { padding: '4px 8px' };
 const inputStyle: React.CSSProperties = { fontSize: 12, padding: '3px 6px', height: 28 };
 
-const roleAcronyme = (id: string) => MOCK_ROLES.find((r) => r.id === id)?.acronyme ?? id;
 const operateurFromOs = (idOs: string) => {
   const os = MOCK_OPERATEUR_SECTEUR.find((o) => o.id === idOs);
   return MOCK_OPERATEURS.find((o) => o.id === os?.id_operateur)?.acronyme ?? idOs;
 };
 
-const ROLE_BADGE_COLORS: Record<string, string> = {
-  CS: 'danger', CF: 'warning', CO: 'info', FS: 'success', MO: 'primary', ES: 'secondary', SE: 'dark',
-};
-
-const emptyForm = (): PosteForm => ({
-  lib: '', cde: '', nbre_postes: 1, role: ROLES_OPT[0],
+const emptyForm = (): ChefSecteurForm => ({
+  lib: '', cde: '', nbre_postes: 1,
   operateur: null, operateur_secteur: null,
   cde_secteur: '', lib_secteur: '', lots: [],
   cde_section: '', region: '', departement: '', sprefecture: '',
   actif: true,
 });
 
-const fillForm = (p: Poste): PosteForm => {
-  const os    = MOCK_OPERATEUR_SECTEUR.find((o) => o.id === p.id_operateur_secteur);
+const fillForm = (cs: ChefSecteur): ChefSecteurForm => {
+  const os    = MOCK_OPERATEUR_SECTEUR.find((o) => o.id === cs.id_operateur_secteur);
   const opOpt = os ? OPERATEURS_OPT.find((o) => o.value === os.id_operateur) ?? null : null;
   const osOpt = opOpt
     ? MOCK_OPERATEUR_SECTEUR
-        .filter((os) => os.id_operateur === p.id_operateur)
-        .map((os) => ({ value: os.id, label: `${os.cde_secteur} — ${os.lib_secteur}` }))
-        .find((os) => os.value === p.id_operateur_secteur) ?? null
+        .filter((o) => o.id_operateur === opOpt.value)
+        .map((o) => ({ value: o.id, label: `${o.cde_secteur} — ${o.lib_secteur}` }))
+        .find((o) => o.value === cs.id_operateur_secteur) ?? null
     : null;
   const lotsDisponibles = MOCK_OPERATEUR_LOT
-    .filter((ol) => ol.id_operateur_secteur === p.id_operateur_secteur)
+    .filter((ol) => ol.id_operateur_secteur === cs.id_operateur_secteur)
     .map((ol) => ({ value: ol.cde_lot, label: `Lot ${ol.num_lot} — ${ol.cde_lot}` }));
-  const selectedLots = p.cde_lot
-    ? p.cde_lot.split(',').map((c) => lotsDisponibles.find((l) => l.value === c.trim())).filter(Boolean) as ComboboxOption[]
+  const selectedLots = cs.cde_lot
+    ? cs.cde_lot.split(',').map((c) => lotsDisponibles.find((l) => l.value === c.trim())).filter(Boolean) as ComboboxOption[]
     : [];
   return {
-    lib: p.lib, cde: p.cde, nbre_postes: p.nbre_postes,
-    role: ROLES_OPT.find((r) => r.value === p.role) ?? ROLES_OPT[0],
+    lib: cs.lib, cde: cs.cde, nbre_postes: cs.nbre_postes,
     operateur: opOpt, operateur_secteur: osOpt,
-    cde_secteur: p.cde_secteur, lib_secteur: p.lib_secteur,
-    lots: selectedLots, cde_section: p.cde_section,
-    region: p.region, departement: p.departement, sprefecture: p.sprefecture,
-    actif: p.actif,
+    cde_secteur: cs.cde_secteur, lib_secteur: cs.lib_secteur,
+    lots: selectedLots, cde_section: cs.cde_section,
+    region: cs.region, departement: cs.departement, sprefecture: cs.sprefecture,
+    actif: cs.actif,
   };
 };
 
 // ---------------------------------------------------------------------------
 // Composant
 // ---------------------------------------------------------------------------
-const PosteList = () => {
+const ChefSecteurList = () => {
   const router       = useRouter();
   const pathname     = usePathname();
   const searchParams = useSearchParams();
   const log          = useLog();
 
-  const [data,         setData        ] = useState<Poste[]>(INITIAL);
+  const [data,         setData        ] = useState<ChefSecteur[]>(INITIAL);
   const [modal,        setModal       ] = useState(false);
-  const [editing,      setEditing     ] = useState<Poste | null>(null);
+  const [editing,      setEditing     ] = useState<ChefSecteur | null>(null);
   const [viewing,      setViewing     ] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Poste | null>(null);
-  const [form,         setForm        ] = useState<PosteForm>(emptyForm);
+  const [deleteTarget, setDeleteTarget] = useState<ChefSecteur | null>(null);
+  const [form,         setForm        ] = useState<ChefSecteurForm>(emptyForm);
 
-  const [fCde,    setFCde   ] = useState(() => searchParams.get('po_cde')  ?? '');
-  const [fLib,    setFLib   ] = useState(() => searchParams.get('po_lib')  ?? '');
-  const [fRole,   setFRole  ] = useState(() => searchParams.get('po_role') ?? '');
-  const [fOp,     setFOp    ] = useState(() => searchParams.get('po_op')   ?? '');
-  const [fSec,    setFSec   ] = useState(() => searchParams.get('po_sec')  ?? '');
-  const [fStatut, setFStatut] = useState(() => searchParams.get('po_sta')  ?? '');
-  const [page,    setPage   ] = useState(() => Number(searchParams.get('po_page') ?? '1'));
+  const [fCde,    setFCde   ] = useState(() => searchParams.get('cs_cde')  ?? '');
+  const [fLib,    setFLib   ] = useState(() => searchParams.get('cs_lib')  ?? '');
+  const [fOp,     setFOp    ] = useState(() => searchParams.get('cs_op')   ?? '');
+  const [fSec,    setFSec   ] = useState(() => searchParams.get('cs_sec')  ?? '');
+  const [fStatut, setFStatut] = useState(() => searchParams.get('cs_sta')  ?? '');
+  const [page,    setPage   ] = useState(() => Number(searchParams.get('cs_page') ?? '1'));
 
   const pushUrl = (overrides: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
@@ -174,36 +153,34 @@ const PosteList = () => {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const debCde = useDebouncedCallback((v: string) => pushUrl({ po_cde: v || null, po_page: null }), 300);
-  const debLib = useDebouncedCallback((v: string) => pushUrl({ po_lib: v || null, po_page: null }), 300);
-  const debSec = useDebouncedCallback((v: string) => pushUrl({ po_sec: v || null, po_page: null }), 300);
+  const debCde = useDebouncedCallback((v: string) => pushUrl({ cs_cde: v || null, cs_page: null }), 300);
+  const debLib = useDebouncedCallback((v: string) => pushUrl({ cs_lib: v || null, cs_page: null }), 300);
+  const debSec = useDebouncedCallback((v: string) => pushUrl({ cs_sec: v || null, cs_page: null }), 300);
 
   const handleCde    = (v: string) => { setFCde(v);    setPage(1); debCde(v); };
   const handleLib    = (v: string) => { setFLib(v);    setPage(1); debLib(v); };
   const handleSec    = (v: string) => { setFSec(v);    setPage(1); debSec(v); };
-  const handleRole   = (v: string) => { setFRole(v);   setPage(1); pushUrl({ po_role: v || null, po_page: null }); };
-  const handleOp     = (v: string) => { setFOp(v);     setPage(1); pushUrl({ po_op:   v || null, po_page: null }); };
-  const handleStatut = (v: string) => { setFStatut(v); setPage(1); pushUrl({ po_sta:  v || null, po_page: null }); };
-  const handlePage   = (p: number) => { setPage(p); pushUrl({ po_page: p > 1 ? String(p) : null }); };
+  const handleOp     = (v: string) => { setFOp(v);     setPage(1); pushUrl({ cs_op:  v || null, cs_page: null }); };
+  const handleStatut = (v: string) => { setFStatut(v); setPage(1); pushUrl({ cs_sta: v || null, cs_page: null }); };
+  const handlePage   = (p: number) => { setPage(p); pushUrl({ cs_page: p > 1 ? String(p) : null }); };
 
   const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
-  const openEdit = (p: Poste) => { setViewing(false); setEditing(p);   setForm(fillForm(p)); setModal(true); };
-  const openView = (p: Poste) => { setViewing(true);  setEditing(null); setForm(fillForm(p)); setModal(true); };
+  const openEdit = (cs: ChefSecteur) => { setViewing(false); setEditing(cs);   setForm(fillForm(cs)); setModal(true); };
+  const openView = (cs: ChefSecteur) => { setViewing(true);  setEditing(null); setForm(fillForm(cs)); setModal(true); };
 
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return;
-    setData((prev) => prev.filter((p) => p.id !== deleteTarget.id));
-    log('DELETE', 'Poste', `Suppression du poste ${deleteTarget.cde}`, deleteTarget.cde);
+    setData((prev) => prev.filter((cs) => cs.id !== deleteTarget.id));
+    log('DELETE', 'ChefSecteur', `Suppression du poste CS ${deleteTarget.cde}`, deleteTarget.cde);
     setDeleteTarget(null);
   };
 
   const handleSave = () => {
     if (!form.cde.trim() || !form.operateur || !form.operateur_secteur) return;
-    const payload: Omit<Poste, 'id'> = {
+    const payload: Omit<ChefSecteur, 'id'> = {
       lib:                  form.lib,
       cde:                  form.cde,
       nbre_postes:          form.nbre_postes,
-      role:                 form.role.value,
       id_operateur_secteur: form.operateur_secteur.value,
       cde_secteur:          form.cde_secteur,
       lib_secteur:          form.lib_secteur,
@@ -216,16 +193,16 @@ const PosteList = () => {
       actif:                form.actif,
     };
     if (editing) {
-      setData((prev) => prev.map((p) => p.id === editing.id ? { id: editing.id, ...payload } : p));
-      log('UPDATE', 'Poste', `Modification du poste ${form.cde}`, form.cde);
+      setData((prev) => prev.map((cs) => cs.id === editing.id ? { id: editing.id, ...payload } : cs));
+      log('UPDATE', 'ChefSecteur', `Modification du poste CS ${form.cde}`, form.cde);
     } else {
-      setData((prev) => [...prev, { id: `po-${Date.now()}`, ...payload }]);
-      log('CREATE', 'Poste', `Création du poste ${form.cde} — ${roleAcronyme(form.role.value)} chez ${form.operateur.label}`, form.cde);
+      setData((prev) => [...prev, { id: `cs-${Date.now()}`, ...payload }]);
+      log('CREATE', 'ChefSecteur', `Création du poste CS ${form.cde}`, form.cde);
     }
     setModal(false);
   };
 
-  // Cascade dans le formulaire
+  // Cascade formulaire
   const secteursOpts: ComboboxOption[] = form.operateur
     ? MOCK_OPERATEUR_SECTEUR
         .filter((os) => os.id_operateur === form.operateur!.value)
@@ -257,17 +234,13 @@ const PosteList = () => {
     }));
   };
 
-  const filtered = useMemo(() => data.filter((p) => {
-    const acr = roleAcronyme(p.role);
-    return (
-      (!fCde    || p.cde.toLowerCase().includes(fCde.toLowerCase())) &&
-      (!fLib    || p.lib.toLowerCase().includes(fLib.toLowerCase())) &&
-      (!fRole   || acr === fRole) &&
-      (!fOp     || MOCK_OPERATEUR_SECTEUR.find((o) => o.id === p.id_operateur_secteur)?.id_operateur === fOp) &&
-      (!fSec    || p.lib_secteur.toLowerCase().includes(fSec.toLowerCase()) || p.cde_secteur.includes(fSec)) &&
-      (!fStatut || (fStatut === 'Actif' ? p.actif : !p.actif))
-    );
-  }), [data, fCde, fLib, fRole, fOp, fSec, fStatut]);
+  const filtered = useMemo(() => data.filter((cs) =>
+    (!fCde    || cs.cde.toLowerCase().includes(fCde.toLowerCase())) &&
+    (!fLib    || cs.lib.toLowerCase().includes(fLib.toLowerCase())) &&
+    (!fOp     || MOCK_OPERATEUR_SECTEUR.find((o) => o.id === cs.id_operateur_secteur)?.id_operateur === fOp) &&
+    (!fSec    || cs.lib_secteur.toLowerCase().includes(fSec.toLowerCase()) || cs.cde_secteur.includes(fSec)) &&
+    (!fStatut || (fStatut === 'Actif' ? cs.actif : !cs.actif))
+  ), [data, fCde, fLib, fOp, fSec, fStatut]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -275,24 +248,23 @@ const PosteList = () => {
   return (
     <div>
       <div className='d-flex justify-content-between align-items-center mb-3'>
-        <h5 className='mb-0'>Liste des postes</h5>
+        <h5 className='mb-0'>Liste des chefs de secteur</h5>
         <Button color='primary' className='d-flex align-items-center gap-1' onClick={openAdd}>
-          <PlusCircle size={16} /> Ajouter poste
+          <PlusCircle size={16} /> Ajouter
         </Button>
       </div>
 
       <Card>
         <CardBody className='p-0'>
           <div className='table-responsive'>
-            <Table className='table table-hover mb-0' style={{ minWidth: 640 }}>
+            <Table className='table table-hover mb-0' style={{ minWidth: 580 }}>
               <thead className='table-light'>
                 <tr>
-                  <th style={{ width: '11%' }}>Code</th>
-                  <th style={{ width: '20%' }}>Libellé</th>
+                  <th style={{ width: '12%' }}>Code</th>
+                  <th style={{ width: '28%' }}>Libellé</th>
                   <th style={{ width: '7%'  }} className='text-center'>Nbre</th>
-                  <th style={{ width: '10%' }}>Rôle</th>
-                  <th style={{ width: '10%' }}>Opérateur</th>
-                  <th style={{ width: '14%' }}>Secteur</th>
+                  <th style={{ width: '12%' }}>Opérateur</th>
+                  <th style={{ width: '18%' }}>Secteur</th>
                   <th style={{ width: '10%' }}>Statut</th>
                   <th style={{ width: '9%'  }} className='text-end'>Actions</th>
                 </tr>
@@ -300,8 +272,7 @@ const PosteList = () => {
                   <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Code…'    value={fCde} onChange={(e) => handleCde(e.target.value)} /></th>
                   <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Libellé…' value={fLib} onChange={(e) => handleLib(e.target.value)} /></th>
                   <th style={colStyle} />
-                  <th style={colStyle}><Combobox options={ROLES_FILTER}      value={ROLES_FILTER.find((o) => o.value === fRole)    ?? ROLES_FILTER[0]}      onChange={(opt) => handleRole(opt?.value ?? '')}   isClearable={false} compact /></th>
-                  <th style={colStyle}><Combobox options={OPERATEURS_FILTER} value={OPERATEURS_FILTER.find((o) => o.value === fOp) ?? OPERATEURS_FILTER[0]} onChange={(opt) => handleOp(opt?.value ?? '')}     isClearable={false} compact /></th>
+                  <th style={colStyle}><Combobox options={OPERATEURS_FILTER} value={OPERATEURS_FILTER.find((o) => o.value === fOp) ?? OPERATEURS_FILTER[0]} onChange={(opt) => handleOp(opt?.value ?? '')} isClearable={false} compact /></th>
                   <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Secteur…' value={fSec} onChange={(e) => handleSec(e.target.value)} /></th>
                   <th style={colStyle}><Combobox options={STATUT_FILTER}     value={STATUT_FILTER.find((o) => o.value === fStatut) ?? STATUT_FILTER[0]}     onChange={(opt) => handleStatut(opt?.value ?? '')} isClearable={false} compact /></th>
                   <th style={colStyle} />
@@ -309,25 +280,21 @@ const PosteList = () => {
               </thead>
               <tbody>
                 {paginated.length === 0 ? (
-                  <tr><td colSpan={8} className='text-center text-muted py-4'>Aucun résultat</td></tr>
-                ) : paginated.map((p) => {
-                  const acr = roleAcronyme(p.role);
-                  return (
-                    <tr key={p.id}>
-                      <td><code>{p.cde}</code></td>
-                      <td className='f-w-600' style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.lib}</td>
-                      <td className='text-center'>{p.nbre_postes}</td>
-                      <td><Badge color={ROLE_BADGE_COLORS[acr] ?? 'secondary'} className='badge-light'>{acr}</Badge></td>
-                      <td>{operateurFromOs(p.id_operateur_secteur)}</td>
-                      <td className='text-muted'>
-                        <span className='me-1' style={{ fontSize: 11, color: '#aaa' }}>{p.cde_secteur}</span>
-                        {p.lib_secteur}
-                      </td>
-                      <td><Badge color={p.actif ? 'success' : 'secondary'} className='badge-light'>{p.actif ? 'Actif' : 'Inactif'}</Badge></td>
-                      <td><RowActions prefix='po' id={p.id} onView={() => openView(p)} onEdit={() => openEdit(p)} onDelete={() => setDeleteTarget(p)} /></td>
-                    </tr>
-                  );
-                })}
+                  <tr><td colSpan={7} className='text-center text-muted py-4'>Aucun résultat</td></tr>
+                ) : paginated.map((cs) => (
+                  <tr key={cs.id}>
+                    <td><code>{cs.cde}</code></td>
+                    <td className='f-w-600' style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cs.lib}</td>
+                    <td className='text-center'>{cs.nbre_postes}</td>
+                    <td>{operateurFromOs(cs.id_operateur_secteur)}</td>
+                    <td className='text-muted'>
+                      <span className='me-1' style={{ fontSize: 11, color: '#aaa' }}>{cs.cde_secteur}</span>
+                      {cs.lib_secteur}
+                    </td>
+                    <td><Badge color={cs.actif ? 'success' : 'secondary'} className='badge-light'>{cs.actif ? 'Actif' : 'Inactif'}</Badge></td>
+                    <td><RowActions prefix='cs' id={cs.id} onView={() => openView(cs)} onEdit={() => openEdit(cs)} onDelete={() => setDeleteTarget(cs)} /></td>
+                  </tr>
+                ))}
               </tbody>
             </Table>
           </div>
@@ -341,7 +308,7 @@ const PosteList = () => {
       <AppDrawer
         isOpen={modal}
         toggle={() => setModal(false)}
-        title={viewing ? 'Détails du poste' : editing ? 'Modifier le poste' : 'Ajouter un poste'}
+        title={viewing ? 'Détails — Chef Secteur' : editing ? 'Modifier le poste CS' : 'Ajouter un Chef Secteur'}
         onSave={viewing ? undefined : handleSave}
         onCancel={() => setModal(false)}
         cancelLabel={viewing ? 'Fermer' : 'Annuler'}
@@ -379,16 +346,7 @@ const PosteList = () => {
           <p className='text-muted fw-semibold small mb-2'>Affectation</p>
 
           <Row>
-            <Col xs='12' sm='6'>
-              <Combobox
-                label='Rôle'
-                isDisabled={viewing}
-                options={ROLES_OPT}
-                value={form.role}
-                onChange={(opt) => opt && setForm((f) => ({ ...f, role: opt }))}
-              />
-            </Col>
-            <Col xs='12' sm='6'>
+            <Col xs='12'>
               <Combobox
                 label='Opérateur *'
                 isDisabled={viewing}
@@ -468,4 +426,4 @@ const PosteList = () => {
   );
 };
 
-export default PosteList;
+export default ChefSecteurList;

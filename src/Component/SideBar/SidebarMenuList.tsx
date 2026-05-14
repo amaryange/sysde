@@ -1,10 +1,14 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { MENUITEMS } from '@/Data/SidebarData';
+import { MENUITEMS_CD } from '@/Data/SidebarDataCD';
 import { MenuItem } from '@/Type/SideBarType';
 import SidebarMenuDropDown from './SidebarMenuDropDown';
 import { usePathname } from 'next/navigation';
+import { useAuthStore } from '@/Store/useAuthStore';
 
 const SidebarMenuList = () => {
+  const role     = useAuthStore((s) => s.user?.role);
+  const menuData = role === 'chef_departement' ? MENUITEMS_CD : MENUITEMS;
   const pathname = usePathname();
   const [active, setActive] = useState(pathname ? pathname : '');
   const [prev, setPrev] = useState<number>(0);
@@ -28,7 +32,7 @@ const SidebarMenuList = () => {
       }
     }
   };
-  return MENUITEMS.map((item: MenuItem, index) => {
+  return menuData.map((item: MenuItem, index) => {
     return (
       <Fragment key={index}>
         <li className='sidebar-main-title'>
