@@ -15,9 +15,14 @@ const SidebarMenuList = () => {
                  : role === 'collaborateur'    ? MENUITEMS_COLLAB
                  : MENUITEMS;
   const pathname = usePathname();
-  const [active, setActive] = useState(pathname ? pathname : '');
+  const [active, setActive] = useState(pathname ?? '');
   const [prev, setPrev] = useState<number>(0);
-  const [linkActive, setLinkActive] = useState(active.split('/')[active.split('/').length - 1]);
+  const [linkActive, setLinkActive] = useState(pathname.split('/').at(-1) ?? '');
+
+  useEffect(() => {
+    setActive(pathname ?? '');
+    setLinkActive(pathname.split('/').at(-1) ?? '');
+  }, [pathname]);
   const handleOpen = (title: string | undefined = '', level: number) => {
     if (active.includes(title)) {
       if (active.includes('/')) {
