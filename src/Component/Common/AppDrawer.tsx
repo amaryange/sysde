@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from 'reactstrap';
 
 const DURATION  = 300;
@@ -35,11 +35,13 @@ const AppDrawer = ({
   const [mounted,  setMounted ] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const panelRef    = useRef<HTMLDivElement>(null);
-  const backdropRef = useRef<HTMLDivElement>(null);
-  const closeTimer  = useRef<ReturnType<typeof setTimeout>>();
-  const drag        = useRef<{ x: number; y: number; t: number } | null>(null);
-  const isMobileRef = useRef(false);
+  const panelRef      = useRef<HTMLDivElement>(null);
+  const backdropRef   = useRef<HTMLDivElement>(null);
+  const isMobileRef   = useRef(false);
+  const mountedRef    = useRef(false); // miroir de mounted sans closure stale
+  const drag          = useRef<{ x: number; y: number; t: number } | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const rafRef        = useRef<{ r1?: number; r2?: number }>({});
 
   // ── Mobile detection ─────────────────────────────────────────────────────────
 
@@ -47,82 +49,109 @@ const AppDrawer = ({
     const mq = window.matchMedia('(max-width: 767px)');
     isMobileRef.current = mq.matches;
     setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => {
-      isMobileRef.current = e.matches;
-      setIsMobile(e.matches);
-    };
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    const h = (e: MediaQueryListEvent) => { isMobileRef.current = e.matches; setIsMobile(e.matches); };
+    mq.addEventListener('change', h);
+    return () => mq.removeEventListener('change', h);
   }, []);
 
-  // ── Animation helpers (DOM direct, pas de re-render) ────────────────────────
+  // ── Helpers DOM ──────────────────────────────────────────────────────────────
 
   const hiddenTransform = () => isMobileRef.current ? 'translateY(100%)' : 'translateX(100%)';
 
-  const animateTo = (target: 'open' | 'closed') => {
+  const setDomState = (open: boolean) => {
     const panel    = panelRef.current;
     const backdrop = backdropRef.current;
     if (!panel) return;
-    panel.style.transition    = `transform ${DURATION}ms cubic-bezier(0.25,0.46,0.45,0.94)`;
-    panel.style.transform     = target === 'open' ? 'translate(0,0)' : hiddenTransform();
+    panel.style.transition = `transform ${DURATION}ms cubic-bezier(0.25,0.46,0.45,0.94)`;
+    panel.style.transform  = open ? 'translate(0,0)' : hiddenTransform();
     if (backdrop) {
       backdrop.style.transition = `opacity ${DURATION}ms ease`;
-      backdrop.style.opacity    = target === 'open' ? '1' : '0';
+      backdrop.style.opacity    = open ? '1' : '0';
     }
   };
 
-  // ── Mount / unmount avec animations ─────────────────────────────────────────
+  const cancelRafs = () => {
+    if (rafRef.current.r1) cancelAnimationFrame(rafRef.current.r1);
+    if (rafRef.current.r2) cancelAnimationFrame(rafRef.current.r2);
+  };
+
+  // Réinitialise la position cachée puis déclenche l'animation d'entrée.
+  // Double rAF : le 1er commit la position cachée dans le navigateur,
+  // le 2e démarre la transition depuis cette position peinte.
+  const animateIn = () => {
+    cancelRafs();
+    const panel    = panelRef.current;
+    const backdrop = backdropRef.current;
+    if (!panel) return;
+    panel.style.transition = 'none';
+    panel.style.transform  = hiddenTransform();
+    if (backdrop) { backdrop.style.transition = 'none'; backdrop.style.opacity = '0'; }
+    rafRef.current.r1 = requestAnimationFrame(() => {
+      rafRef.current.r2 = requestAnimationFrame(() => setDomState(true));
+    });
+  };
+
+  // ── isOpen → mount / unmount avec animation ──────────────────────────────────
 
   useEffect(() => {
-    clearTimeout(closeTimer.current);
+    clearTimeout(closeTimerRef.current);
 
     if (isOpen) {
-      setMounted(true);
-      // useEffect s'exécute après le paint — le panel est déjà rendu à
-      // hiddenTransform(). On peut déclencher la transition directement.
+      if (!mountedRef.current) {
+        // Première ouverture : monter le DOM.
+        // L'animation est déclenchée par useLayoutEffect + useEffect [mounted].
+        mountedRef.current = true;
+        setMounted(true);
+      } else {
+        // Déjà monté (ex : fermeture interrompue) — ré-animer depuis la position cachée.
+        animateIn();
+      }
     } else {
-      // Déclencher l'animation de sortie sur le DOM avant de démonter
-      animateTo('closed');
-      closeTimer.current = setTimeout(() => setMounted(false), DURATION);
+      setDomState(false);
+      closeTimerRef.current = setTimeout(() => {
+        mountedRef.current = false;
+        setMounted(false);
+      }, DURATION);
     }
 
-    return () => clearTimeout(closeTimer.current);
+    return () => clearTimeout(closeTimerRef.current);
   }, [isOpen]);
 
-  // Après le mount, définir la position initiale puis animer l'entrée
-  useEffect(() => {
+  // Avant le premier paint : cacher le panel pour éviter le flash de contenu.
+  useLayoutEffect(() => {
     if (!mounted) return;
     const panel    = panelRef.current;
     const backdrop = backdropRef.current;
     if (!panel) return;
-    // Poser la position de départ sans transition (avant le premier paint)
-    panel.style.transition    = 'none';
-    panel.style.transform     = hiddenTransform();
-    if (backdrop) {
-      backdrop.style.transition = 'none';
-      backdrop.style.opacity    = '0';
-    }
-    // Déclencher la transition d'entrée après le paint initial
-    const id = requestAnimationFrame(() => animateTo('open'));
-    return () => cancelAnimationFrame(id);
+    panel.style.transition = 'none';
+    panel.style.transform  = hiddenTransform();
+    if (backdrop) { backdrop.style.transition = 'none'; backdrop.style.opacity = '0'; }
   }, [mounted]);
 
-  // ── Drag handlers (écriture directe sur le DOM, 0 re-render) ────────────────
+  // Après le premier paint : démarrer la transition d'entrée.
+  // useEffect s'exécute après le paint, donc le navigateur a déjà
+  // rendu la position cachée — setDomState peut partir directement.
+  useEffect(() => {
+    if (!mounted) return;
+    cancelRafs();
+    rafRef.current.r1 = requestAnimationFrame(() => setDomState(true));
+    return cancelRafs;
+  }, [mounted]);
+
+  // ── Drag handlers ────────────────────────────────────────────────────────────
 
   const onDragStart = (e: React.PointerEvent) => {
-    const panel    = panelRef.current;
-    const backdrop = backdropRef.current;
+    const panel = panelRef.current;
     if (!panel) return;
     drag.current = { x: e.clientX, y: e.clientY, t: Date.now() };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    // Désactiver la transition pendant le drag
     panel.style.transition = 'none';
+    const backdrop = backdropRef.current;
     if (backdrop) backdrop.style.transition = 'none';
   };
 
   const onDragMove = (e: React.PointerEvent) => {
-    const panel    = panelRef.current;
-    const backdrop = backdropRef.current;
+    const panel = panelRef.current;
     if (!drag.current || !panel) return;
     const delta = isMobileRef.current
       ? Math.max(0, e.clientY - drag.current.y)
@@ -130,6 +159,7 @@ const AppDrawer = ({
     panel.style.transform = isMobileRef.current
       ? `translateY(${delta}px)`
       : `translateX(${delta}px)`;
+    const backdrop = backdropRef.current;
     if (backdrop) {
       const maxD = isMobileRef.current ? window.innerHeight * 0.6 : width * 0.8;
       backdrop.style.opacity = String(Math.max(0, 1 - delta / maxD));
@@ -138,20 +168,18 @@ const AppDrawer = ({
 
   const onDragEnd = (e: React.PointerEvent) => {
     if (!drag.current) return;
-    const elapsed = Date.now() - drag.current.t;
-    const delta   = isMobileRef.current
+    const elapsed  = Date.now() - drag.current.t;
+    const delta    = isMobileRef.current
       ? Math.max(0, e.clientY - drag.current.y)
       : Math.max(0, e.clientX - drag.current.x);
     const velocity = elapsed > 0 ? delta / elapsed : 0;
-    drag.current = null;
+    drag.current   = null;
 
     if (delta > CLOSE_PX || velocity > CLOSE_VEL) {
-      // Animer depuis la position actuelle du drag jusqu'à hors écran, puis toggle
-      animateTo('closed');
+      setDomState(false);
       setTimeout(() => toggle(), DURATION);
     } else {
-      // Revenir en position ouverte
-      animateTo('open');
+      setDomState(true);
     }
   };
 
@@ -175,8 +203,6 @@ const AppDrawer = ({
 
   if (!mounted) return null;
 
-  // transform absent du style React — géré exclusivement via panelRef
-  // pour éviter qu'un re-render n'écrase la position posée par animateTo()
   const panelStyle: React.CSSProperties = isMobile
     ? {
         position: 'fixed',
@@ -202,7 +228,6 @@ const AppDrawer = ({
 
   return (
     <>
-      {/* opacity géré exclusivement via backdropRef pour éviter les conflits re-render */}
       <div
         ref={backdropRef}
         onClick={toggle}
