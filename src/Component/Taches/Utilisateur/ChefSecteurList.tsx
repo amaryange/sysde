@@ -56,7 +56,7 @@ const ChefSecteurList = () => {
   const searchParams = useSearchParams();
 
   const user     = useAuthStore((s) => s.user);
-  const userOpId = MOCK_OPERATEURS.find((o) => o.acronyme === user?.operateur)?.id ?? null;
+  const userOpId = MOCK_OPERATEURS.find((o) => o.acronyme === user?.operateur && o.encadreur)?.id ?? null;
   const isLocked = userOpId !== null;
 
   // Secteurs disponibles selon l'opérateur connecté

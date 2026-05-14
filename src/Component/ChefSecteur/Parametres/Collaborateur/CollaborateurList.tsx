@@ -155,7 +155,7 @@ const CollaborateurList = () => {
   const log          = useLog();
 
   const user         = useAuthStore((s) => s.user);
-  const userOpId     = MOCK_OPERATEURS.find((o) => o.acronyme === user?.operateur)?.id ?? null;
+  const userOpId     = MOCK_OPERATEURS.find((o) => o.acronyme === user?.operateur && o.encadreur)?.id ?? null;
   const isLocked     = userOpId !== null;
   const lockedOpOpt: ComboboxOption | null = isLocked
     ? (OPERATEURS_OPT.find((o) => o.value === userOpId) ?? null)

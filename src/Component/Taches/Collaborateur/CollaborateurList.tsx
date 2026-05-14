@@ -63,7 +63,7 @@ const CollaborateurList = () => {
   const log          = useLog();
 
   const user         = useAuthStore((s) => s.user);
-  const userOpId     = MOCK_OPERATEURS.find((o) => o.acronyme === user?.operateur)?.id ?? null;
+  const userOpId     = MOCK_OPERATEURS.find((o) => o.acronyme === user?.operateur && o.encadreur)?.id ?? null;
   const isLocked     = userOpId !== null;
   const lockedOpOpt  = isLocked ? (OP_OPTS.find((o) => o.value === userOpId) ?? OP_OPTS[0]) : OP_OPTS[0];
 
