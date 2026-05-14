@@ -11,6 +11,7 @@ import AppPagination from '@/Component/Common/AppPagination';
 import Combobox, { ComboboxOption } from '@/Component/Common/Combobox';
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 import { useLog } from '@/hooks/useLog';
+import { useAuthStore } from '@/Store/useAuthStore';
 import { MOCK_ROLES, MOCK_SECTEURS, MOCK_OPERATEURS } from '@/Data/mockData';
 
 type Collaborateur = {
@@ -61,6 +62,11 @@ const CollaborateurList = () => {
   const searchParams = useSearchParams();
   const log          = useLog();
 
+  const user         = useAuthStore((s) => s.user);
+  const userOpId     = MOCK_OPERATEURS.find((o) => o.acronyme === user?.operateur)?.id ?? null;
+  const isLocked     = userOpId !== null;
+  const lockedOpOpt  = isLocked ? (OP_OPTS.find((o) => o.value === userOpId) ?? OP_OPTS[0]) : OP_OPTS[0];
+
   const [data,         setData        ] = useState<Collaborateur[]>(INITIAL);
   const [modal,        setModal       ] = useState(false);
   const [viewing,      setViewing     ] = useState(false);
@@ -104,7 +110,7 @@ const CollaborateurList = () => {
     operateur:OP_OPTS.find((o) => o.value === c.id_operateur)   ?? OP_OPTS[0],
   });
 
-  const openAdd  = () => { setViewing(false); setEditing(null); setForm(emptyForm()); setModal(true); };
+  const openAdd  = () => { setViewing(false); setEditing(null); setForm({ ...emptyForm(), operateur: lockedOpOpt }); setModal(true); };
   const openView = (c: Collaborateur) => { setViewing(true);  setEditing(null); setForm(fillForm(c)); setModal(true); };
   const openEdit = (c: Collaborateur) => { setViewing(false); setEditing(c);    setForm(fillForm(c)); setModal(true); };
 
@@ -133,17 +139,20 @@ const CollaborateurList = () => {
     setModal(false);
   };
 
-  const filtered = useMemo(() => data.filter((c) => {
-    const nom = `${c.nom} ${c.prenoms}`.toLowerCase();
-    return (
-      (!fNom     || nom.includes(fNom.toLowerCase())) &&
-      (!fMat     || c.mat.toLowerCase().includes(fMat.toLowerCase())) &&
-      (!fRole    || c.id_role    === fRole)    &&
-      (!fSecteur || c.id_secteur === fSecteur) &&
-      (!fOp      || c.id_operateur === fOp)    &&
-      (!fStatut  || (fStatut === 'Actif' ? c.actif : !c.actif))
-    );
-  }), [data, fNom, fMat, fRole, fSecteur, fOp, fStatut]);
+  const filtered = useMemo(() => {
+    const base = isLocked ? data.filter((c) => c.id_operateur === userOpId) : data;
+    return base.filter((c) => {
+      const nom = `${c.nom} ${c.prenoms}`.toLowerCase();
+      return (
+        (!fNom     || nom.includes(fNom.toLowerCase())) &&
+        (!fMat     || c.mat.toLowerCase().includes(fMat.toLowerCase())) &&
+        (!fRole    || c.id_role    === fRole)    &&
+        (!fSecteur || c.id_secteur === fSecteur) &&
+        (!fOp      || c.id_operateur === fOp)    &&
+        (!fStatut  || (fStatut === 'Actif' ? c.actif : !c.actif))
+      );
+    });
+  }, [data, fNom, fMat, fRole, fSecteur, fOp, fStatut, isLocked, userOpId]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -177,7 +186,7 @@ const CollaborateurList = () => {
                   <th style={colStyle}><Input bsSize='sm' style={inputStyle} placeholder='Mat…' value={fMat} onChange={(e) => handleMat(e.target.value)} /></th>
                   <th style={colStyle}><Combobox options={ROLE_FILTER}    value={ROLE_FILTER.find((o) => o.value === fRole) ?? ROLE_FILTER[0]}       onChange={(opt) => handleRole(opt?.value ?? '')}    isClearable={false} compact /></th>
                   <th style={colStyle}><Combobox options={SECTEUR_FILTER} value={SECTEUR_FILTER.find((o) => o.value === fSecteur) ?? SECTEUR_FILTER[0]} onChange={(opt) => handleSecteur(opt?.value ?? '')} isClearable={false} compact /></th>
-                  <th style={colStyle}><Combobox options={OP_FILTER}      value={OP_FILTER.find((o) => o.value === fOp) ?? OP_FILTER[0]}             onChange={(opt) => handleOp(opt?.value ?? '')}      isClearable={false} compact /></th>
+                  <th style={colStyle}>{!isLocked && <Combobox options={OP_FILTER} value={OP_FILTER.find((o) => o.value === fOp) ?? OP_FILTER[0]} onChange={(opt) => handleOp(opt?.value ?? '')} isClearable={false} compact />}</th>
                   <th style={colStyle} />
                   <th style={colStyle}><Combobox options={STATUT_FILTER}  value={STATUT_FILTER.find((o) => o.value === fStatut) ?? STATUT_FILTER[0]}  onChange={(opt) => handleStatut(opt?.value ?? '')}  isClearable={false} compact /></th>
                   <th style={colStyle} />
@@ -258,7 +267,7 @@ const CollaborateurList = () => {
               <Combobox isDisabled={viewing} label='Secteur' options={SECTEUR_OPTS} value={form.secteur} onChange={(opt) => opt && setForm((f) => ({ ...f, secteur: opt }))} />
             </Col>
             <Col xs='12'>
-              <Combobox isDisabled={viewing} label='Opérateur' options={OP_OPTS} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} />
+              <Combobox isDisabled={viewing || isLocked} label='Opérateur' options={OP_OPTS} value={form.operateur} onChange={(opt) => opt && setForm((f) => ({ ...f, operateur: opt }))} />
             </Col>
           </Row>
 
