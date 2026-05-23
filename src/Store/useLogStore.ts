@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type LogAction  = 'LOGIN' | 'LOGOUT' | 'CREATE' | 'UPDATE' | 'DELETE';
-export type LogEntity  = 'Operateur' | 'Poste' | 'Contrat' | 'Exercice' | 'Lot' | 'Secteur' | 'Utilisateur' | 'Session';
+export type LogEntity  = 'Operateur' | 'Poste' | 'Contrat' | 'Exercice' | 'Lot' | 'Secteur' | 'Utilisateur' | 'Session' | 'ChefSecteur' | 'Collaborateur';
 
 export interface LogEntry {
   id:          string;

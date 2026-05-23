@@ -40,7 +40,7 @@ const AppDrawer = ({
   const isMobileRef   = useRef(false);
   const mountedRef    = useRef(false); // miroir de mounted sans closure stale
   const drag          = useRef<{ x: number; y: number; t: number } | null>(null);
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const rafRef        = useRef<{ r1?: number; r2?: number }>({});
 
   // ── Mobile detection ─────────────────────────────────────────────────────────
