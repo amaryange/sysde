@@ -3,14 +3,14 @@
 import dynamic from 'next/dynamic';
 import { Container } from 'reactstrap';
 
-const DefaultContainer = dynamic(
-  () => import('@/Component/Dashboard/Default/DefaultContainer'),
+const CDDashboardContainer = dynamic(
+  () => import('@/Component/Dashboard/CD/CDDashboardContainer'),
   { ssr: false }
 );
 
 const CDDashboardPage = () => (
   <Container fluid className='dashboard-default-sec'>
-    <DefaultContainer />
+    <CDDashboardContainer />
   </Container>
 );
 

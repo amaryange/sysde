@@ -17,28 +17,11 @@ import {
   MOCK_SECTEURS,
   MOCK_OPERATEUR_SECTEUR,
   MOCK_OPERATEUR_LOT,
+  MOCK_POSTES,
+  type MockPoste as Poste,
 } from '@/Data/mockData';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-type Poste = {
-  id:                    string;
-  lib:                   string;
-  cde:                   string;
-  nbre_postes:           number;
-  role:                  string;
-  id_operateur_secteur:  string;
-  cde_secteur:           string;
-  lib_secteur:           string;
-  cde_lot:               string;   // ex: 'LT-01,LT-02,LT-03'
-  num_lot:               string;   // ex: '1, 2, 3'
-  cde_section:           string;
-  region:                string;
-  departement:           string;
-  sprefecture:           string;
-  actif:                 boolean;
-};
+// Poste = MockPoste importé depuis mockData
 
 type PosteForm = {
   lib:                   string;
@@ -81,17 +64,6 @@ const STATUT_FILTER: ComboboxOption[] = [
   { value: 'Inactif', label: 'Inactif' },
 ];
 
-// ---------------------------------------------------------------------------
-// Données initiales
-// ---------------------------------------------------------------------------
-const INITIAL: Poste[] = [
-  { id: 'po-1', lib: 'Chef Secteur Abengourou',           cde: 'CS-ABG-001', nbre_postes: 1, role: 'rl-1', id_operateur_secteur: 'os-1', cde_secteur: '001', lib_secteur: 'Abengourou',   cde_lot: 'LT-01,LT-02,LT-03', num_lot: '1, 2, 3', cde_section: 'A, B', region: 'Indénié-Djuablin', departement: 'Abengourou',   sprefecture: 'Abengourou',   actif: true  },
-  { id: 'po-2', lib: 'Contrôleur Formation L1',           cde: 'CF-ABG-001', nbre_postes: 2, role: 'rl-2', id_operateur_secteur: 'os-1', cde_secteur: '001', lib_secteur: 'Abengourou',   cde_lot: 'LT-01',             num_lot: '1',       cde_section: 'A',    region: 'Indénié-Djuablin', departement: 'Abengourou',   sprefecture: 'Abengourou',   actif: true  },
-  { id: 'po-3', lib: 'Moniteur Bondoukou 1',              cde: 'MO-BDK-001', nbre_postes: 3, role: 'rl-5', id_operateur_secteur: 'os-3', cde_secteur: '002', lib_secteur: 'Bondoukou',    cde_lot: 'LT-04',             num_lot: '4',       cde_section: 'C',    region: 'Zanzan',           departement: 'Bondoukou',    sprefecture: 'Bondoukou',    actif: true  },
-  { id: 'po-4', lib: 'Formateur Saigné Tanda',            cde: 'FS-TDA-001', nbre_postes: 2, role: 'rl-4', id_operateur_secteur: 'os-5', cde_secteur: '004', lib_secteur: 'Tanda',        cde_lot: 'LT-08,LT-09',       num_lot: '8, 9',    cde_section: 'D',    region: 'Zanzan',           departement: 'Tanda',        sprefecture: 'Tanda',        actif: false },
-  { id: 'po-5', lib: 'Équipe Spéciale Daoukro',           cde: 'ES-DKR-001', nbre_postes: 1, role: 'rl-6', id_operateur_secteur: 'os-4', cde_secteur: '005', lib_secteur: 'Daoukro',      cde_lot: 'LT-10',             num_lot: '10',      cde_section: 'E',    region: "N'Zi-Comoé",      departement: 'Daoukro',      sprefecture: 'Daoukro',      actif: true  },
-  { id: 'po-6', lib: 'Contrôleur Ordinaire Agnibilékrou', cde: 'CO-AGN-001', nbre_postes: 4, role: 'rl-3', id_operateur_secteur: 'os-2', cde_secteur: '003', lib_secteur: 'Agnibilékrou', cde_lot: 'LT-06,LT-07',       num_lot: '6, 7',    cde_section: 'F',    region: 'Indénié-Djuablin', departement: 'Agnibilékrou', sprefecture: 'Agnibilékrou', actif: true  },
-];
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -123,7 +95,7 @@ const fillForm = (p: Poste): PosteForm => {
   const opOpt = os ? OPERATEURS_OPT.find((o) => o.value === os.id_operateur) ?? null : null;
   const osOpt = opOpt
     ? MOCK_OPERATEUR_SECTEUR
-        .filter((os) => os.id_operateur === p.id_operateur)
+        .filter((o) => o.id_operateur === os?.id_operateur)
         .map((os) => ({ value: os.id, label: `${os.cde_secteur} — ${os.lib_secteur}` }))
         .find((os) => os.value === p.id_operateur_secteur) ?? null
     : null;
@@ -153,7 +125,7 @@ const PosteList = () => {
   const searchParams = useSearchParams();
   const log          = useLog();
 
-  const [data,         setData        ] = useState<Poste[]>(INITIAL);
+  const [data,         setData        ] = useState<Poste[]>(MOCK_POSTES);
   const [modal,        setModal       ] = useState(false);
   const [editing,      setEditing     ] = useState<Poste | null>(null);
   const [viewing,      setViewing     ] = useState(false);

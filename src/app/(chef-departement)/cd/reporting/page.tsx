@@ -1,12 +1,17 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { Container } from 'reactstrap';
 
-const AnalyticsContainer = dynamic(
-  () => import('@/Component/Analytics/AnalyticsContainer'),
+const CDReportingContainer = dynamic(
+  () => import('@/Component/Dashboard/CD/CDReportingContainer'),
   { ssr: false }
 );
 
-const CDReportingPage = () => <AnalyticsContainer />;
+const CDReportingPage = () => (
+  <Container fluid className='dashboard-default-sec'>
+    <CDReportingContainer />
+  </Container>
+);
 
 export default CDReportingPage;
